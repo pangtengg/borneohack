@@ -1,0 +1,32 @@
+﻿App.tsx(2,28): error TS2307: Cannot find module './hooks/useSession' or its corresponding type declarations.
+App.tsx(3,29): error TS2307: Cannot find module './hooks/useLocation' or its corresponding type declarations.
+App.tsx(4,34): error TS2307: Cannot find module './components/LanguageSelector' or its corresponding type declarations.
+App.tsx(5,31): error TS2307: Cannot find module './components/MessageBubble' or its corresponding type declarations.
+App.tsx(6,29): error TS2307: Cannot find module './components/VoiceButton' or its corresponding type declarations.
+App.tsx(7,37): error TS2307: Cannot find module './components/EmergencyPhraseBank' or its corresponding type declarations.
+App.tsx(8,61): error TS2307: Cannot find module './types' or its corresponding type declarations.
+App.tsx(9,33): error TS2307: Cannot find module './utils/helpers' or its corresponding type declarations.
+App.tsx(148,27): error TS7053: Element implicitly has an 'any' type because expression of type 'any' can't be used to index type '{ standby: string; listening: string; processing: string; speaking: string; }'.
+App.tsx(390,31): error TS7053: Element implicitly has an 'any' type because expression of type 'any' can't be used to index type '{ standby: string; listening: string; processing: string; speaking: string; }'.
+App.tsx(410,40): error TS7006: Parameter 'msg' implicitly has an 'any' type.
+App.tsx(497,53): error TS7006: Parameter 'm' implicitly has an 'any' type.
+App.tsx(498,55): error TS7006: Parameter 'm' implicitly has an 'any' type.
+components/CountryPickerModal.tsx(41,57): error TS2345: Argument of type 'Omit<CountryInfo, "status">' is not assignable to parameter of type 'CountryInfo'.
+  Property 'status' is missing in type 'Omit<CountryInfo, "status">' but required in type 'CountryInfo'.
+components/CountryPill.tsx(15,38): error TS2322: Type '"#48BB78"' is not assignable to type '"#1E3A6E"'.
+components/CountryPill.tsx(16,43): error TS2322: Type '"#F6AD55"' is not assignable to type '"#1E3A6E"'.
+components/CountryPill.tsx(17,43): error TS2322: Type '"#FC5A5A"' is not assignable to type '"#1E3A6E"'.
+components/ManualFallbackModal.tsx(70,61): error TS2345: Argument of type '"medical" | "rescue" | "evacuation" | "children"' is not assignable to parameter of type 'SetStateAction<"medical">'.
+  Type '"rescue"' is not assignable to type 'SetStateAction<"medical">'.
+index (1).ts(1,81): error TS2307: Cannot find module '../types' or its corresponding type declarations.
+index (1).ts(2,88): error TS2307: Cannot find module '../utils/constants' or its corresponding type declarations.
+index (1).ts(4,35): error TS2339: Property 'env' does not exist on type 'ImportMeta'.
+useSession.ts(2,80): error TS2307: Cannot find module '../types' or its corresponding type declarations.
+useSession.ts(3,66): error TS2307: Cannot find module '../api' or its corresponding type declarations.
+useSession.ts(4,77): error TS2307: Cannot find module '../utils/helpers' or its corresponding type declarations.
+useSession.ts(5,38): error TS2307: Cannot find module './useSpeechRecognition' or its corresponding type declarations.
+useSession.ts(25,16): error TS7006: Parameter 'prev' implicitly has an 'any' type.
+useSession.ts(29,16): error TS7006: Parameter 'prev' implicitly has an 'any' type.
+useSession.ts(37,16): error TS7006: Parameter 'prev' implicitly has an 'any' type.
+useSession.ts(39,35): error TS7006: Parameter 'm' implicitly has an 'any' type.
+useSession.ts(149,16): error TS7006: Parameter 'prev' implicitly has an 'any' type.

@@ -26,7 +26,7 @@ export default function TabLayout() {
         options={{
           title: 'VoiceBridge',
           tabBarLabel: 'Home',
-          tabBarIcon: ({ color }) => <TabIcon icon="🏠" color={color} />,
+          tabBarIcon: ({ color }) => <TabIcon icon="🏠" color={color} isActive={color === Colors.accent} />,
           headerTitle: '🌏 VoiceBridge',
         }}
       />
@@ -35,7 +35,7 @@ export default function TabLayout() {
         options={{
           title: 'Voice Bridge',
           tabBarLabel: 'Bridge',
-          tabBarIcon: ({ color }) => <TabIcon icon="🎙️" color={color} />,
+          tabBarIcon: ({ color }) => <TabIcon icon="🎙️" color={color} isActive={color === Colors.accent} />,
         }}
       />
       <Tabs.Screen
@@ -43,7 +43,16 @@ export default function TabLayout() {
         options={{
           title: 'Phrase Bank',
           tabBarLabel: 'Phrases',
-          tabBarIcon: ({ color }) => <TabIcon icon="⚡" color={color} />,
+          tabBarIcon: ({ color }) => <TabIcon icon="⚡" color={color} isActive={color === Colors.accent} />,
+        }}
+      />
+      <Tabs.Screen
+        name="dialect"
+        options={{
+          title: 'Dialect',
+          tabBarLabel: 'Dialect',
+          tabBarActiveTintColor: '#7C3AED',
+          tabBarIcon: ({ color }) => <TabIcon icon="🗣️" color={color} isActive={color === '#7C3AED'} />,
         }}
       />
       <Tabs.Screen
@@ -51,14 +60,14 @@ export default function TabLayout() {
         options={{
           title: 'Settings',
           tabBarLabel: 'Settings',
-          tabBarIcon: ({ color }) => <TabIcon icon="⚙️" color={color} />,
+          tabBarIcon: ({ color }) => <TabIcon icon="⚙️" color={color} isActive={color === Colors.accent} />,
         }}
       />
     </Tabs>
   );
 }
 
-function TabIcon({ icon, color }: { icon: string; color: string }) {
+function TabIcon({ icon, color, isActive }: { icon: string; color: string; isActive?: boolean }) {
   const { Text } = require('react-native');
-  return <Text style={{ fontSize: 22, opacity: color === Colors.accent ? 1 : 0.5 }}>{icon}</Text>;
+  return <Text style={{ fontSize: 22, opacity: isActive ? 1 : 0.5 }}>{icon}</Text>;
 }

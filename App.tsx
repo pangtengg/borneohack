@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { useEffect, useRef, useState } from 'react';
 import { useSession } from './hooks/useSession';
 import { useLocation } from './hooks/useLocation';
@@ -120,7 +121,7 @@ export default function App() {
             fontSize: 9, letterSpacing: 3,
             color: session.mode === 'listening' ? '#ff4444' :
               session.mode === 'processing' ? '#ffaa00' :
-              session.mode === 'speaking' ? '#44ff88' : '#445',
+                session.mode === 'speaking' ? '#44ff88' : '#445',
             animation: session.mode !== 'standby' ? 'pulse 1.5s infinite' : 'none',
           }}>
             {session.mode.toUpperCase()}

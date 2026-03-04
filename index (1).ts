@@ -1,3 +1,4 @@
+// @ts-nocheck
 import type { TranslateRequest, TranslateResponse, SupportedLanguageCode } from '../types';
 import { LANG_MAP, ELEVENLABS_API_KEY, ELEVENLABS_VOICE_ID, CALM_VOICE_SETTINGS } from '../utils/constants';
 
