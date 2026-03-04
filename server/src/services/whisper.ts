@@ -1,9 +1,10 @@
-import OpenAI from 'openai';
+import fetch from 'node-fetch';
+import FormData from 'form-data';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const GROQ_API_URL = 'https://api.groq.com/openai/v1/audio/transcriptions';
 
 export interface WhisperResult {
   text: string;
@@ -11,7 +12,7 @@ export interface WhisperResult {
 }
 
 /**
- * Transcribe a base64-encoded audio file using OpenAI Whisper.
+ * Transcribe a base64-encoded audio file using Groq API (Whisper model).
  * Whisper auto-detects the source language.
  */
 export async function transcribeAudio(audioBase64: string): Promise<WhisperResult> {
@@ -23,15 +24,36 @@ export async function transcribeAudio(audioBase64: string): Promise<WhisperResul
   fs.writeFileSync(tmpFile, buffer);
 
   try {
-    const response = await openai.audio.transcriptions.create({
-      file: fs.createReadStream(tmpFile) as any,
-      model: 'whisper-1',
-      response_format: 'verbose_json',
+    const formData = new FormData();
+    formData.append('file', fs.createReadStream(tmpFile), {
+      filename: 'audio.m4a',
+      contentType: 'audio/m4a',
+    });
+    formData.append('model', 'whisper-large-v3');
+    formData.append('response_format', 'verbose_json');
+
+    const response = await fetch(GROQ_API_URL, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${process.env.GROQ_API_KEY}`,
+        ...formData.getHeaders(),
+      },
+      body: formData,
     });
 
+    if (!response.ok) {
+      const errorBody = await response.text();
+      throw new Error(`Groq API error ${response.status}: ${errorBody}`);
+    }
+
+    const data = (await response.json()) as {
+      text: string;
+      language?: string;
+    };
+
     return {
-      text: response.text,
-      language: (response as any).language ?? 'en',
+      text: data.text,
+      language: data.language ?? 'en',
     };
   } finally {
     fs.unlinkSync(tmpFile);
