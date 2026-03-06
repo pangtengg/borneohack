@@ -15,6 +15,50 @@ VoiceBridge is a stress-adaptive, location-aware emergency communication app tha
 
 ---
 
+## Project Structure
+
+```
+borneohack/
+├── app/
+│   ├── _layout.tsx              # Root layout
+│   └── (tabs)/
+│       ├── _layout.tsx          # Tab navigator
+│       ├── index.tsx            # Home — mode selection + location detection
+│       ├── bridge.tsx           # Voice Bridge — core PTT screen
+│       ├── phrases.tsx          # Emergency Phrase Bank
+│       └── settings.tsx         # Language & server settings
+├── components/
+│   ├── PushToTalk.tsx           # Animated hold-to-record button
+│   ├── PhraseCard.tsx           # Phrase grid card
+│   ├── LanguageBadge.tsx        # Language indicator pill
+│   └── WaveformIndicator.tsx    # Recording animation
+├── lib/
+│   ├── api.ts                   # Backend API client
+│   ├── audioPlayer.ts           # expo-av playback
+│   ├── audioRecorder.ts         # expo-av recording
+│   ├── languageMap.ts           # GPS → language resolver (offline)
+│   └── store.ts                 # Zustand global state
+├── constants/
+│   ├── colors.ts                # Design tokens
+│   ├── languages.ts             # Supported language list
+│   └── phrases.ts               # Emergency phrase bank data
+└── server/
+    ├── src/
+    │   ├── index.ts             # Express server entry
+    │   ├── routes/
+    │   │   ├── translate.ts     # POST /api/translate
+    │   │   └── phrases.ts       # POST /api/phrase
+    │   ├── services/
+    │   │   ├── whisper.ts       # OpenAI Whisper wrapper
+    │   │   ├── translate.ts     # Google Translate wrapper
+    │   │   └── elevenlabs.ts    # ElevenLabs TTS wrapper
+    │   └── utils/
+    │       └── languageMap.ts   # Coordinate → language resolver
+    └── package.json
+```
+
+---
+
 ## Key Features
 
 ### Zero-Friction Setup
@@ -47,8 +91,8 @@ Pre-translated critical phrases with instant ElevenLabs playback — no speech r
 ```
 [Expo App] ──► POST /api/translate ──► [Whisper STT] ──► [Google Translate] ──► [ElevenLabs TTS]
     │                                                                                   │
-    └── GPS coords ──► SE Asia language map (offline)                                  │
-    └─────────────────────────────── base64 MP3 audio ◄────────────────────────────────┘
+    │── GPS coords ──► SE Asia language map (offline)                                   │
+    └─────────────────────────────── base64 MP3 audio ◄─────────────────────────────────┘
 ```
 
 ---
@@ -178,47 +222,17 @@ Translates a preset phrase and returns synthesized speech (cached after first ca
 
 ---
 
-## Project Structure
+## Target Users
 
-```
-borneohack/
-├── app/
-│   ├── _layout.tsx              # Root layout
-│   └── (tabs)/
-│       ├── _layout.tsx          # Tab navigator
-│       ├── index.tsx            # Home — mode selection + location detection
-│       ├── bridge.tsx           # Voice Bridge — core PTT screen
-│       ├── phrases.tsx          # Emergency Phrase Bank
-│       └── settings.tsx         # Language & server settings
-├── components/
-│   ├── PushToTalk.tsx           # Animated hold-to-record button
-│   ├── PhraseCard.tsx           # Phrase grid card
-│   ├── LanguageBadge.tsx        # Language indicator pill
-│   └── WaveformIndicator.tsx    # Recording animation
-├── lib/
-│   ├── api.ts                   # Backend API client
-│   ├── audioPlayer.ts           # expo-av playback
-│   ├── audioRecorder.ts         # expo-av recording
-│   ├── languageMap.ts           # GPS → language resolver (offline)
-│   └── store.ts                 # Zustand global state
-├── constants/
-│   ├── colors.ts                # Design tokens
-│   ├── languages.ts             # Supported language list
-│   └── phrases.ts               # Emergency phrase bank data
-└── server/
-    ├── src/
-    │   ├── index.ts             # Express server entry
-    │   ├── routes/
-    │   │   ├── translate.ts     # POST /api/translate
-    │   │   └── phrases.ts       # POST /api/phrase
-    │   ├── services/
-    │   │   ├── whisper.ts       # OpenAI Whisper wrapper
-    │   │   ├── translate.ts     # Google Translate wrapper
-    │   │   └── elevenlabs.ts    # ElevenLabs TTS wrapper
-    │   └── utils/
-    │       └── languageMap.ts   # Coordinate → language resolver
-    └── package.json
-```
+---
+
+## How to interact with prototype
+> step by step guide for judges
+> test cases if applicable
+
+---
+
+## AI disclosure
 
 ---
 
