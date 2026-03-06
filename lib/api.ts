@@ -1,8 +1,8 @@
-import Constants from 'expo-constants';
+import { useAppStore } from './store';
 
-const BASE_URL =
-  (Constants.expoConfig?.extra?.apiUrl as string | undefined) ??
-  'http://localhost:3001';
+function getBaseUrl(): string {
+  return useAppStore.getState().serverUrl;
+}
 
 export interface TranslateRequest {
   audioBase64: string;
@@ -32,7 +32,7 @@ export interface PhraseResponse {
 }
 
 export async function translateSpeech(req: TranslateRequest): Promise<TranslateResponse> {
-  const res = await fetch(`${BASE_URL}/api/translate`, {
+  const res = await fetch(`${getBaseUrl()}/api/translate`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(req),
@@ -45,7 +45,7 @@ export async function translateSpeech(req: TranslateRequest): Promise<TranslateR
 }
 
 export async function translatePhrase(req: PhraseRequest): Promise<PhraseResponse> {
-  const res = await fetch(`${BASE_URL}/api/phrase`, {
+  const res = await fetch(`${getBaseUrl()}/api/phrase`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(req),

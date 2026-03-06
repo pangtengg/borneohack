@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -19,9 +19,10 @@ export default function SettingsScreen() {
     myLanguageFlag,
     detectedLanguage,
     setMyLanguage,
+    serverUrl,
+    setServerUrl,
   } = useAppStore();
 
-  const [apiUrl, setApiUrl] = useState('http://localhost:3001');
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
@@ -82,9 +83,9 @@ export default function SettingsScreen() {
         </Text>
         <TextInput
           style={styles.input}
-          value={apiUrl}
-          onChangeText={setApiUrl}
-          placeholder="http://localhost:3001"
+          value={serverUrl}
+          onChangeText={setServerUrl}
+          placeholder="http://192.168.x.x:3001"
           placeholderTextColor={Colors.textMuted}
           autoCapitalize="none"
           autoCorrect={false}

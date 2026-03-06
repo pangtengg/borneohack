@@ -21,7 +21,7 @@ const MODES = [
     title: 'Survivor',
     description: 'I need help. Speak and be understood instantly.',
     color: Colors.survivor,
-    route: '/bridge?mode=survivor',
+    route: { pathname: '/(tabs)/bridge', params: { mode: 'survivor' } },
   },
   {
     id: 'rescuer',
@@ -29,7 +29,7 @@ const MODES = [
     title: 'Rescuer',
     description: 'I am helping others. Two-way translation bridge.',
     color: Colors.rescuer,
-    route: '/bridge?mode=rescuer',
+    route: { pathname: '/(tabs)/bridge', params: { mode: 'rescuer' } },
   },
   {
     id: 'relay',
@@ -37,7 +37,7 @@ const MODES = [
     title: 'Relay Volunteer',
     description: 'Bridge communication across an evacuation zone.',
     color: Colors.relay,
-    route: '/bridge?mode=relay',
+    route: { pathname: '/(tabs)/bridge', params: { mode: 'relay' } },
   },
 ] as const;
 

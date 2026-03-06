@@ -4,6 +4,10 @@ import { CountryInfo } from './countryDetect';
 import { GhostPack, GlossaryPack, DetectedDialect } from './types/dialect';
 
 interface AppState {
+  // Server URL
+  serverUrl: string;
+  setServerUrl: (url: string) => void;
+
   // Existing
   detectedLanguage: DetectedLanguage | null;
   myLanguage: string;
@@ -41,6 +45,10 @@ interface AppState {
 }
 
 export const useAppStore = create<AppState>((set) => ({
+  // Server URL
+  serverUrl: 'http://localhost:3001',
+  setServerUrl: (url) => set({ serverUrl: url }),
+
   // Existing
   detectedLanguage: null,
   myLanguage: 'en',
