@@ -9,7 +9,7 @@
 
 VoiceBridge is a stress-adaptive, location-aware emergency communication app that bridges language barriers between disaster survivors and rescuers across Southeast Asia.
 
-**The problem:** In a disaster, a Malay-speaking survivor trapped under rubble cannot communicate with a Mandarin-speaking rescuer. Every second of miscommunication costs lives.
+**The problem:** In a disaster, a survivor speaking a specific local dialect cannot communicate with a rescuer from a different region. Every second of miscommunication costs lives.
 
 **The solution:** VoiceBridge auto-detects your GPS location, pre-loads the dominant local language with zero setup, translates your speech in real-time, and outputs a **calm, authoritative voice** regardless of how panicked the speaker sounds — because tone drives compliance in emergencies.
 
@@ -23,21 +23,38 @@ borneohack/
 │   ├── _layout.tsx              # Root layout
 │   └── (tabs)/
 │       ├── _layout.tsx          # Tab navigator
-│       ├── index.tsx            # Home — mode selection + location detection
+│       ├── index.tsx            # Home — mode selection & location
 │       ├── bridge.tsx           # Voice Bridge — core PTT screen
+│       ├── dialect.tsx          # Dialect selection & configuration
 │       ├── phrases.tsx          # Emergency Phrase Bank
-│       └── settings.tsx         # Language & server settings
+│       └── settings.tsx         # App settings & server configuration
 ├── components/
-│   ├── PushToTalk.tsx           # Animated hold-to-record button
-│   ├── PhraseCard.tsx           # Phrase grid card
+│   ├── CountryPickerModal.tsx   # Regional selection UI
+│   ├── CountryPill.tsx          # Selected region indicator
+│   ├── DialectBadge.tsx         # Active dialect indicator
+│   ├── GhostCard.tsx            # Ghost matching UI component
 │   ├── LanguageBadge.tsx        # Language indicator pill
+│   ├── ManualFallbackModal.tsx  # Manual override for auto-detect
+│   ├── PanicToggle.tsx          # Emergency mode toggle
+│   ├── PatchedCard.tsx          # Glossary patch UI component
+│   ├── PhraseBankGrid.tsx       # Grid layout for emergency phrases
+│   ├── PhraseCard.tsx           # Individual phrase button
+│   ├── PushToTalk.tsx           # Animated hold-to-record button
 │   └── WaveformIndicator.tsx    # Recording animation
 ├── lib/
 │   ├── api.ts                   # Backend API client
 │   ├── audioPlayer.ts           # expo-av playback
 │   ├── audioRecorder.ts         # expo-av recording
-│   ├── languageMap.ts           # GPS → language resolver (offline)
-│   └── store.ts                 # Zustand global state
+│   ├── countryDetect.ts         # GPS-based country resolution
+│   ├── dialectStorage.ts        # Local storage for dialect preferences
+│   ├── languageMap.ts           # Core language mappings
+│   ├── store.ts                 # Zustand global state
+│   ├── data/demoPacks.ts        # Pre-loaded demo configurations
+│   ├── types/dialect.ts         # TypeScript definitions for dialects
+│   └── utils/
+│       ├── dialectDetect.ts     # Dialect parsing logic
+│       ├── ghostMatch.ts        # Text/Audio ghost matching utilities
+│       └── glossaryPatch.ts     # Regional vocabulary substitutions
 ├── constants/
 │   ├── colors.ts                # Design tokens
 │   ├── languages.ts             # Supported language list
@@ -53,7 +70,7 @@ borneohack/
     │   │   ├── translate.ts     # Google Translate wrapper
     │   │   └── elevenlabs.ts    # ElevenLabs TTS wrapper
     │   └── utils/
-    │       └── languageMap.ts   # Coordinate → language resolver
+    │       └── languageMap.ts   # Backend coordinate resolver
     └── package.json
 ```
 
@@ -62,12 +79,17 @@ borneohack/
 ## Key Features
 
 ### Zero-Friction Setup
-- GPS auto-detects the dominant local language on launch (no language menu to navigate in a panic)
+- GPS auto-detects the dominant local language and dialect on launch, no language menu to navigate in a panic. (e.g., distinguishing between standard Malay and specific Bornean dialects).
+- Includes manual fallback modals if GPS fails.
 - Covers 14 SE Asian language regions: Malay, Indonesian, Thai, Vietnamese, Filipino, Burmese, Khmer, Lao, and more
 
 ### Stress-Adaptive Voice Output
 - ElevenLabs Multilingual v2 synthesizes all output using a single pre-configured **calm, authoritative "relief coordinator" voice**
 - Strips panic from the output tone — a panicking survivor's voice becomes a clear, calm command for rescuers
+
+### Glossary Patching & Ghost Matching
+- Translates not just standard languages, but patches specific regional vocabularies using custom glossary maps.
+- Ensures highly accurate local context is maintained during translations.
 
 ### Three Operating Modes
 | Mode | Who uses it | How it works |
@@ -102,8 +124,9 @@ Pre-translated critical phrases with instant ElevenLabs playback — no speech r
 | Layer | Technology |
 |-------|-----------|
 | Mobile App | React Native (Expo SDK 55, Expo Router) |
+| State Management | Zustand |
 | Backend | Node.js + Express (TypeScript) |
-| Speech-to-Text | OpenAI Whisper (`whisper-1`) |
+| Speech-to-Text | Groq |
 | Translation | Google Cloud Translate v2 |
 | Text-to-Speech | ElevenLabs Multilingual v2 |
 | Location | `expo-location` (GPS) |
@@ -115,18 +138,36 @@ Pre-translated critical phrases with instant ElevenLabs playback — no speech r
 
 ### Prerequisites
 - Node.js 18+
-- Expo CLI (`npm install -g expo-cli`)
-- API keys for: OpenAI, Google Cloud Translate, ElevenLabs
+- Expo Account, Expo Application Services (EAS) CLI
+- API keys for: Groq, Google Cloud Translate, ElevenLabs
 
 ### 1. Mobile App
 
 ```bash
-# From repo root
+# From repo root, this also downloads the Expo CLI (NOT the same as EAS CLI)
 npm install
+
+# Install the EAS CLI if not installed
+npm install -g eas-cli
+
+# Login to Expo Account
+eas login
+```
+
+**In app.json file in root, under 'extra' field, if there is an 'eas' field, delete it. Then only someone new can build the APK.**
+
+```bash
+# Register a new EAS Project ID under your Expo Account
+npx eas-cli init
+
+# Build the APK development build and then download to mobile
+eas build -p android --profile development
+
+# Then run the APK
 npx expo start
 ```
 
-Scan the QR code with **Expo Go** on your phone.
+Scan the QR code with **Expo Go** on your iOS or Android device.
 
 ### 2. Backend Server
 
@@ -136,8 +177,8 @@ npm install
 
 # Copy and fill in your API keys
 cp .env.example .env
-# Edit .env with your keys
 
+# Edit .env with your keys
 npm run dev
 ```
 
@@ -156,7 +197,7 @@ http://192.168.x.x:3001
 ## Environment Variables (server/.env)
 
 ```env
-OPENAI_API_KEY=sk-...
+GROQ_API_KEY=gsk-...
 GOOGLE_TRANSLATE_API_KEY=AIza...
 ELEVENLABS_API_KEY=...
 ELEVENLABS_VOICE_ID=...        # ID of your pre-cloned calm voice
@@ -217,8 +258,8 @@ Translates a preset phrase and returns synthesized speech (cached after first ca
 | Goal | Impact |
 |------|--------|
 | **SDG 11** — Sustainable Cities | Directly improves disaster resilience infrastructure for SE Asian cities prone to floods, earthquakes, and typhoons |
-| **SDG 10** — Reduced Inequalities | Removes language barriers for migrant workers, ethnic minorities, and refugees who are disproportionately vulnerable during disasters |
-| **SDG 17** — Partnerships | Enables cross-border ASEAN disaster relief coordination — a Thai rescuer and a Myanmar survivor can communicate instantly |
+| **SDG 10** — Reduced Inequalities | Removes language barriers for migrant workers and ethnic minorities during disasters using localized dialects |
+| **SDG 17** — Partnerships | Enables cross-border ASEAN disaster relief coordination |
 
 ---
 
