@@ -35,6 +35,7 @@ yarn-error.*
 .env
 server/.env
 server/dist/
+*.qoder
 
 # typescript
 *.tsbuildinfo

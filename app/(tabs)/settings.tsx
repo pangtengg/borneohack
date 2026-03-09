@@ -8,11 +8,14 @@ import {
   TextInput,
   Alert,
 } from 'react-native';
+import { router } from 'expo-router';
 import { Colors } from '../../constants/colors';
 import { SUPPORTED_LANGUAGES } from '../../constants/languages';
 import { useAppStore } from '../../lib/store';
+import { useAuth } from '../../lib/authContext';
 
 export default function SettingsScreen() {
+  const { user, signOut } = useAuth();
   const {
     myLanguage,
     myLanguageLabel,
@@ -22,6 +25,15 @@ export default function SettingsScreen() {
     serverUrl,
     setServerUrl,
   } = useAppStore();
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      router.replace('/(tabs)/AuthScreen');
+    } catch (error) {
+      Alert.alert('Error', 'Failed to sign out. Please try again.');
+    }
+  };
 
 
   return (
@@ -91,6 +103,19 @@ export default function SettingsScreen() {
           autoCorrect={false}
         />
       </View>
+
+      {/* Account */}
+      {user && (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>ACCOUNT</Text>
+          <Text style={styles.sectionDesc}>
+            Signed in as: {user.email}
+          </Text>
+          <TouchableOpacity style={styles.signOutButton} onPress={handleSignOut}>
+            <Text style={styles.signOutText}>Sign Out</Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
       {/* About */}
       <View style={styles.section}>
@@ -187,4 +212,18 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
   },
   sdgText: { color: Colors.accent, fontSize: 12, fontWeight: '700' },
+  signOutButton: {
+    backgroundColor: Colors.surface,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: '#ff4444',
+    paddingVertical: 14,
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  signOutText: {
+    color: '#ff4444',
+    fontSize: 15,
+    fontWeight: '700',
+  },
 });
