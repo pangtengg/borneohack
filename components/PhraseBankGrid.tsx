@@ -50,7 +50,7 @@ export function PhraseBankGrid({ phrases, onPlayPhrase, isLoadingKey, isPlayingK
 
             <TouchableOpacity
                 style={styles.moreBtn}
-                onPress={() => router.push('/phrases')}
+                onPress={() => router.push('/(survivor)/phrases' as any)}
             >
                 <Text style={styles.moreBtnText}>More Phrases ⚡ →</Text>
             </TouchableOpacity>

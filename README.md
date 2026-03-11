@@ -20,14 +20,23 @@ VoiceBridge is a stress-adaptive, location-aware emergency communication app tha
 ```
 borneohack/
 ├── app/
-│   ├── _layout.tsx              # Root layout
-│   └── (tabs)/
-│       ├── _layout.tsx          # Tab navigator
-│       ├── index.tsx            # Home — mode selection & location
-│       ├── bridge.tsx           # Voice Bridge — core PTT screen
-│       ├── dialect.tsx          # Dialect selection & configuration
-│       ├── phrases.tsx          # Emergency Phrase Bank
-│       └── settings.tsx         # App settings & server configuration
+│   ├── _layout.tsx              # Root layout + AuthProvider
+│   ├── index.tsx                # Auth gate — redirects by session & role
+│   ├── auth.tsx                 # Login/Signup (Survivor or Authority)
+│   ├── (survivor)/
+│   │   ├── _layout.tsx          # Stack: tabs + Report, Convo, Broadcast, Phrases
+│   │   ├── (tabs)/
+│   │   │   ├── _layout.tsx      # Tabs: Home, Profile, Settings
+│   │   │   ├── index.tsx        # Home — 3 buttons: Report, Convo, Broadcast
+│   │   │   ├── profile.tsx      # Survivor profile form (cloud DB)
+│   │   │   └── settings.tsx     # Backend URL, Dialect config
+│   │   ├── report.tsx           # Make report (AI flow placeholder)
+│   │   ├── convo.tsx            # Voice bridge — STT/TTS, dialect, phrases
+│   │   ├── broadcast.tsx        # Location-based broadcasts (placeholder)
+│   │   └── phrases.tsx          # Full phrase bank by category
+│   └── (authority)/
+│       ├── _layout.tsx          # Authority layout
+│       └── index.tsx            # Authority dashboard (incoming reports)
 ├── components/
 │   ├── CountryPickerModal.tsx   # Regional selection UI
 │   ├── CountryPill.tsx          # Selected region indicator
@@ -42,6 +51,10 @@ borneohack/
 │   ├── PushToTalk.tsx           # Animated hold-to-record button
 │   └── WaveformIndicator.tsx    # Recording animation
 ├── lib/
+│   ├── supabase.ts              # Supabase client (AsyncStorage persistence)
+│   ├── auth/
+│   │   ├── AuthContext.tsx      # Session provider (signIn, signUp, signOut)
+│   │   └── useProfile.ts        # Profile fetch for role-based routing
 │   ├── api.ts                   # Backend API client
 │   ├── audioPlayer.ts           # expo-av playback
 │   ├── audioRecorder.ts         # expo-av recording
@@ -91,15 +104,14 @@ borneohack/
 - Translates not just standard languages, but patches specific regional vocabularies using custom glossary maps.
 - Ensures highly accurate local context is maintained during translations.
 
-### Three Operating Modes
-| Mode | Who uses it | How it works |
-|------|-------------|--------------|
-| **Survivor** | Person in distress | Hold-to-speak, translated to local language and played aloud |
-| **Rescuer** | Emergency responder | Split-screen bidirectional — rescuer speaks top, survivor speaks bottom |
-| **Relay Volunteer** | Multilingual coordinator | Routes translation across an entire evacuation zone |
+### Role-Based Access (Supabase Auth)
+| Role | Who uses it | How it works |
+|------|-------------|---------------|
+| **Survivor** | Person in distress | Sign up before disaster. Three actions: **Report** (AI voice flow), **Convo** (voice/text with officers), **Broadcast** (location-based alerts). Profile stores personal info in cloud DB. |
+| **Authority** | Emergency responder | Login only (org pre-creates accounts). Dashboard to view incoming reports, add notes, update status. |
 
-### One-Tap Emergency Phrase Bank
-Pre-translated critical phrases with instant ElevenLabs playback — no speech required:
+### Quick Phrases in Report & Convo
+Pre-translated critical phrases with instant playback — easy-to-tap buttons during active STT/TTS sessions:
 - "I am trapped under rubble"
 - "I need medical help"
 - "I have children with me"
@@ -111,7 +123,7 @@ Pre-translated critical phrases with instant ElevenLabs playback — no speech r
 ## Architecture
 
 ```
-[Expo App] ──► POST /api/translate ──► [Whisper STT] ──► [Google Translate] ──► [ElevenLabs TTS]
+[Expo App] ──► POST /api/translate ──► [Groq STT] ──► [Google Translate] ──► [ElevenLabs TTS]
     │                                                                                   │
     │── GPS coords ──► SE Asia language map (offline)                                   │
     └─────────────────────────────── base64 MP3 audio ◄─────────────────────────────────┘
@@ -122,8 +134,9 @@ Pre-translated critical phrases with instant ElevenLabs playback — no speech r
 ## Tech Stack
 
 | Layer | Technology |
-|-------|-----------|
+|-------|------------|
 | Mobile App | React Native (Expo SDK 55, Expo Router) |
+| Auth & Profiles | Supabase |
 | State Management | Zustand |
 | Backend | Node.js + Express (TypeScript) |
 | Speech-to-Text | Groq |
@@ -140,6 +153,33 @@ Pre-translated critical phrases with instant ElevenLabs playback — no speech r
 - Node.js 18+
 - Expo Account, Expo Application Services (EAS) CLI
 - API keys for: Groq, Google Cloud Translate, ElevenLabs
+- Supabase project (for Auth and profiles)
+
+### Supabase Setup
+1. Create a project at [supabase.com](https://supabase.com)
+2. Run the SQL to create `profiles` table with RLS and `handle_new_user` trigger (see migration plan or README section below)
+3. In `app.json` under `extra`, set `supabaseUrl` and `supabaseAnonKey` to your project values
+4. Authority users: create via Supabase dashboard, then set `role = 'authority'` in `profiles` for that user
+
+**Profiles SQL (run in Supabase SQL Editor):**
+```sql
+create table public.profiles (
+  id uuid primary key references auth.users on delete cascade,
+  role text not null check (role in ('survivor', 'authority')),
+  lang_reading text, lang_speaking text, lang_listening text,
+  legal_name text, nationality text, ic_passport text, age int, gender text,
+  race text, religion text, address text, medical_conditions text, emergency_contacts jsonb,
+  service_name text, location text, rank text, superior text, office_number text, working_hours text
+);
+alter table public.profiles enable row level security;
+create policy "Users can read own profile" on public.profiles for select using (auth.uid() = id);
+create policy "Users can update own profile" on public.profiles for update using (auth.uid() = id);
+create policy "Users can insert own profile" on public.profiles for insert with check (auth.uid() = id);
+create or replace function public.handle_new_user() returns trigger as $$
+begin insert into public.profiles (id, role) values (new.id, 'survivor'); return new; end;
+$$ language plpgsql security definer;
+create trigger on_auth_user_created after insert on auth.users for each row execute procedure public.handle_new_user();
+```
 
 ### 1. Mobile App
 
@@ -163,11 +203,11 @@ npx eas-cli init
 # Build the APK development build and then download to mobile
 eas build -p android --profile development
 
-# Then run the APK
-npx expo start
-```
+# Scan QR code shown in terminal using mobile camera, then follow instructions in mobile to open the app in mobile
 
-Scan the QR code with **Expo Go** on your iOS or Android device.
+# Then run the app in pc terminal
+npx expo start --dev-client
+```
 
 ### 2. Backend Server
 
