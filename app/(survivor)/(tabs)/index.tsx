@@ -1,9 +1,10 @@
-import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Colors } from '../../../constants/colors';
-import { detectCountry } from '../../../lib/countryDetect';
+import { detectCountry, CountryInfo } from '../../../lib/countryDetect';
 import { useAppStore } from '../../../lib/store';
+import { useAuth } from '../../../lib/auth/AuthContext';
 
 const ACTIONS = [
   { id: 'report', icon: '📋', title: 'Report', desc: 'Make a report. Talk to AI, answer questions.', color: Colors.survivor, route: '/(survivor)/report' },
@@ -13,14 +14,51 @@ const ACTIONS = [
 
 export default function SurvivorHomeScreen() {
   const router = useRouter();
-  const { setDetectedCountry } = useAppStore();
+  const { signOut } = useAuth();
+  const { detectedCountry, setDetectedCountry } = useAppStore();
+  const [detecting, setDetecting] = useState(true);
 
   useEffect(() => {
-    detectCountry().then(setDetectedCountry);
+    setDetecting(true);
+    detectCountry().then((country) => {
+      setDetectedCountry(country);
+      setDetecting(false);
+    });
   }, [setDetectedCountry]);
+
+  const handleSignOut = async () => {
+    await signOut();
+    router.replace('/auth');
+  };
 
   return (
     <View style={styles.container}>
+      {/* Location Badge - Auto Detected */}
+      <View style={styles.locationCard}>
+        <Text style={styles.locationLabel}>📍 Your Location Detected</Text>
+        {detecting ? (
+          <View style={styles.detectingRow}>
+            <ActivityIndicator size="small" color={Colors.accent} />
+            <Text style={styles.detectingText}>Detecting...</Text>
+          </View>
+        ) : detectedCountry ? (
+          <View style={styles.locationRow}>
+            <Text style={styles.locationFlag}>{detectedCountry.flag}</Text>
+            <View>
+              <Text style={styles.locationName}>{detectedCountry.name}</Text>
+              <Text style={styles.locationLang}>
+                Language: {detectedCountry.langFlag} {detectedCountry.langLabel}
+              </Text>
+            </View>
+            {detectedCountry.status === 'cached' && (
+              <Text style={styles.cachedBadge}>📶 Cached</Text>
+            )}
+          </View>
+        ) : (
+          <Text style={styles.locationError}>Unable to detect location</Text>
+        )}
+      </View>
+
       <View style={styles.hero}>
         <Text style={styles.heroTitle}>Disaster Voice Bridge</Text>
         <Text style={styles.heroSubtitle}>
@@ -60,6 +98,64 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.background,
     padding: 20,
+  },
+  // Location Card
+  locationCard: {
+    backgroundColor: Colors.surface,
+    borderRadius: 16,
+    borderWidth: 1.5,
+    borderColor: Colors.border,
+    padding: 16,
+    marginBottom: 20,
+  },
+  locationLabel: {
+    color: Colors.textMuted,
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 1,
+    marginBottom: 12,
+    textTransform: 'uppercase',
+  },
+  detectingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  detectingText: {
+    color: Colors.textSecondary,
+    fontSize: 14,
+  },
+  locationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  locationFlag: {
+    fontSize: 32,
+  },
+  locationName: {
+    color: Colors.textPrimary,
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  locationLang: {
+    color: Colors.textSecondary,
+    fontSize: 13,
+    marginTop: 2,
+  },
+  cachedBadge: {
+    marginLeft: 'auto',
+    backgroundColor: `${Colors.accent}22`,
+    color: Colors.accent,
+    fontSize: 11,
+    fontWeight: '600',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  locationError: {
+    color: Colors.danger,
+    fontSize: 14,
   },
   hero: {
     marginBottom: 24,
