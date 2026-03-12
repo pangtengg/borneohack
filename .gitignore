@@ -35,6 +35,11 @@ yarn-error.*
 .env
 server/.env
 server/dist/
+*.qoder
+backend/venv/
+backend/google-credentials.json
+backend/**/__pycache__/
+backend/**/*.pyc
 
 # typescript
 *.tsbuildinfo
