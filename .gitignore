@@ -35,6 +35,9 @@ yarn-error.*
 .env
 server/.env
 server/dist/
+*.qoder
+backend/venv/
+backend/google-credentials.json
 
 # typescript
 *.tsbuildinfo

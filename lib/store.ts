@@ -46,7 +46,7 @@ interface AppState {
 
 export const useAppStore = create<AppState>((set) => ({
   // Server URL
-  serverUrl: 'http://localhost:3001',
+  serverUrl: 'http://localhost:8000',
   setServerUrl: (url) => set({ serverUrl: url }),
 
   // Existing
