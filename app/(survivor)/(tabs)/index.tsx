@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Colors } from '../../../constants/colors';
-import { detectCountry, CountryInfo } from '../../../lib/countryDetect';
+import { detectCountry, saveOverrideCountry, getAllCountries, CountryInfo } from '../../../lib/countryDetect';
 import { useAppStore } from '../../../lib/store';
 import { useAuth } from '../../../lib/auth/AuthContext';
 
@@ -31,6 +31,24 @@ export default function SurvivorHomeScreen() {
     router.replace('/auth');
   };
 
+  const handleManualCountrySelect = () => {
+    const countries = getAllCountries();
+    Alert.alert(
+      'Select Your Country',
+      'Auto-detection failed. Please select your country manually:',
+      [
+        ...countries.map((country) => ({
+          text: `${country.flag} ${country.name}`,
+          onPress: async () => {
+            await saveOverrideCountry(country.code);
+            setDetectedCountry({ ...country, status: 'online' });
+          },
+        })),
+        { text: 'Cancel', style: 'cancel' },
+      ]
+    );
+  };
+
   return (
     <View style={styles.container}>
       {/* Location Badge - Auto Detected */}
@@ -41,7 +59,7 @@ export default function SurvivorHomeScreen() {
             <ActivityIndicator size="small" color={Colors.accent} />
             <Text style={styles.detectingText}>Detecting...</Text>
           </View>
-        ) : detectedCountry ? (
+        ) : detectedCountry && detectedCountry.status !== 'failed' ? (
           <View style={styles.locationRow}>
             <Text style={styles.locationFlag}>{detectedCountry.flag}</Text>
             <View>
@@ -55,7 +73,10 @@ export default function SurvivorHomeScreen() {
             )}
           </View>
         ) : (
-          <Text style={styles.locationError}>Unable to detect location</Text>
+          <TouchableOpacity style={styles.manualSelectButton} onPress={handleManualCountrySelect}>
+            <Text style={styles.locationError}>⚠️ Unable to detect location</Text>
+            <Text style={styles.tapToSelect}>Tap to select manually →</Text>
+          </TouchableOpacity>
         )}
       </View>
 
@@ -156,6 +177,15 @@ const styles = StyleSheet.create({
   locationError: {
     color: Colors.danger,
     fontSize: 14,
+  },
+  manualSelectButton: {
+    paddingVertical: 8,
+  },
+  tapToSelect: {
+    color: Colors.accent,
+    fontSize: 13,
+    marginTop: 4,
+    fontWeight: '600',
   },
   hero: {
     marginBottom: 24,
