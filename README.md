@@ -4,8 +4,7 @@
 > Built for BorneoHack — SDG 11 · SDG 10 · SDG 17
 - Report PDF Goodle Drive: https://drive.google.com/file/d/1nA_KL7StGEsp1yVFpLJPaSgCOZXrlRAs/view?usp=sharing
 - Demo Video: https://www.youtube.com/watch?v=VFgdZabLWTU
-- Github: https://github.com/pangtengg/borneohack
-  
+- Github: https://github.com/pangtengg/borneohack **two branch (abel & authority)  
 ---
 
 ## Why VoiceBridge?
