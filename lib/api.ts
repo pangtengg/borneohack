@@ -1,7 +1,31 @@
 import { useAppStore } from './store';
 
+const FETCH_TIMEOUT_MS = 15000;
+
 function getBaseUrl(): string {
   return useAppStore.getState().serverUrl;
+}
+
+async function fetchWithTimeout(
+  url: string,
+  options: RequestInit,
+  timeoutMs = FETCH_TIMEOUT_MS
+): Promise<Response> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const res = await fetch(url, { ...options, signal: controller.signal });
+    clearTimeout(timeout);
+    return res;
+  } catch (e) {
+    clearTimeout(timeout);
+    if (e instanceof Error) {
+      if (e.name === 'AbortError') throw new Error('Request timed out. Check your connection.');
+      if (e.message.includes('Network request failed') || e.message.includes('Failed to fetch'))
+        throw new Error('Network error. Ensure the backend is running and reachable.');
+    }
+    throw e;
+  }
 }
 
 export interface TranslateRequest {
@@ -93,27 +117,29 @@ export interface UploadPhraseRequest {
 }
 
 export async function translateSpeech(req: TranslateRequest): Promise<TranslateResponse> {
-  const res = await fetch(`${getBaseUrl()}/api/translate`, {
+  const url = `${getBaseUrl()}/api/translate`;
+  const res = await fetchWithTimeout(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(req),
   });
   if (!res.ok) {
     const err = await res.text();
-    throw new Error(`Translation failed: ${err}`);
+    throw new Error(err || 'Translation failed. Check backend connection.');
   }
   return res.json();
 }
 
 export async function translatePhrase(req: PhraseRequest): Promise<PhraseResponse> {
-  const res = await fetch(`${getBaseUrl()}/api/phrase`, {
+  const url = `${getBaseUrl()}/api/phrase`;
+  const res = await fetchWithTimeout(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(req),
   });
   if (!res.ok) {
     const err = await res.text();
-    throw new Error(`Phrase translation failed: ${err}`);
+    throw new Error(err || 'Phrase translation failed. Check backend connection.');
   }
   return res.json();
 }

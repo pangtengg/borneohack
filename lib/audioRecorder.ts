@@ -3,7 +3,10 @@ import { Audio } from 'expo-av';
 let recording: Audio.Recording | null = null;
 
 export async function startRecording(): Promise<void> {
-  await Audio.requestPermissionsAsync();
+  const { status } = await Audio.requestPermissionsAsync();
+  if (status !== 'granted') {
+    throw new Error('Microphone permission is required for voice input.');
+  }
   await Audio.setAudioModeAsync({
     allowsRecordingIOS: true,
     playsInSilentModeIOS: true,

@@ -6,6 +6,7 @@ import { demoKelantanGhost, demoHokkienGhost, demoKelantanGlossary, demoHokkienG
 const STORAGE_KEYS = {
     GHOST_ENABLED: 'ghost_enabled',
     DIALECT_ENABLED: 'dialect_enabled',
+    ENABLED_DIALECT_NAMES: 'enabled_dialect_names',
     GHOST_PACKS: 'ghost_packs',
     GLOSSARY_PACKS: 'glossary_packs',
 };
@@ -50,6 +51,13 @@ export const initializeDialectStore = async () => {
             await saveGlossaryPacks([demoKelantanGlossary, demoHokkienGlossary]);
         }
 
+        // 5. Enabled dialect names (Dialect Bank)
+        const enabledStr = await AsyncStorage.getItem(STORAGE_KEYS.ENABLED_DIALECT_NAMES);
+        if (enabledStr) {
+            const names: string[] = JSON.parse(enabledStr);
+            store.setEnabledDialectNames(names);
+        }
+
     } catch (error) {
         console.error('Failed to initialize dialect store', error);
     }
@@ -71,4 +79,9 @@ export const saveGhostPacks = async (packs: GhostPack[]) => {
 
 export const saveGlossaryPacks = async (packs: GlossaryPack[]) => {
     await AsyncStorage.setItem(STORAGE_KEYS.GLOSSARY_PACKS, JSON.stringify(packs));
+};
+
+export const saveEnabledDialectNames = async (names: string[]) => {
+    await AsyncStorage.setItem(STORAGE_KEYS.ENABLED_DIALECT_NAMES, JSON.stringify(names));
+    useAppStore.getState().setEnabledDialectNames(names);
 };

@@ -31,16 +31,24 @@ export function ManualFallbackModal({ visible, onClose, onTranslateAndSpeak }: P
         setIsProcessing(true);
         try {
             await onTranslateAndSpeak(text);
-            setText(''); // Clear on success
-        } catch {
-            // Error handled by parent
+            setText('');
+            onClose();
+        } catch (e) {
+            const msg = e instanceof Error ? e.message : 'Translation failed. Check your connection.';
+            Alert.alert('Could not translate', msg, [{ text: 'OK' }]);
         } finally {
             setIsProcessing(false);
         }
     };
 
     return (
-        <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+        <Modal
+            visible={visible}
+            transparent
+            animationType="fade"
+            onRequestClose={onClose}
+            statusBarTranslucent
+        >
             <KeyboardAvoidingView
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                 style={styles.overlay}

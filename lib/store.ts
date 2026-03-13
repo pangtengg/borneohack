@@ -42,6 +42,10 @@ interface AppState {
   setDetectedDialect: (dialect: DetectedDialect) => void;
   addGhostPack: (pack: GhostPack) => void;
   addGlossaryPack: (pack: GlossaryPack) => void;
+
+  // Dialect Bank: per-dialect selection for STT
+  enabledDialectNames: string[];
+  toggleDialectEnabled: (dialectName: string) => void;
 }
 
 export const useAppStore = create<AppState>((set) => ({

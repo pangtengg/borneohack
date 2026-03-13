@@ -184,30 +184,23 @@ create trigger on_auth_user_created after insert on auth.users for each row exec
 ### 1. Mobile App
 
 ```bash
-# From repo root, this also downloads the Expo CLI (NOT the same as EAS CLI)
+# From repo root
 npm install
-
-# Install the EAS CLI if not installed
-npm install -g eas-cli
-
-# Login to Expo Account
-eas login
 ```
 
-**In app.json file in root, under 'extra' field, if there is an 'eas' field, delete it. Then only someone new can build the APK.**
+**Run with USB debugging (recommended):**
+
+1. Connect your phone to the laptop via USB
+2. Enable USB debugging on the phone (Developer options)
+3. Run:
 
 ```bash
-# Register a new EAS Project ID under your Expo Account
-npx eas-cli init
-
-# Build the APK development build and then download to mobile
-eas build -p android --profile development
-
-# Scan QR code shown in terminal using mobile camera, then follow instructions in mobile to open the app in mobile
-
-# Then run the app in pc terminal
-npx expo start --dev-client
+npx expo start
 ```
+
+4. Press `a` for Android or `i` for iOS. The app opens on your device with hot reload — changes in code appear live without rebuilding.
+
+**Note:** For first-time setup, you may need a development build (`eas build`) if using native modules. For day-to-day development with USB, `npx expo start` is sufficient and avoids repeated APK builds.
 
 ### 2. Backend Server
 
