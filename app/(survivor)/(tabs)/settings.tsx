@@ -7,15 +7,18 @@ import {
   TouchableOpacity,
   TextInput,
   Switch,
+  Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Colors } from '../../../constants/colors';
 import { SUPPORTED_LANGUAGES } from '../../../constants/languages';
 import { useAppStore } from '../../../lib/store';
 import { saveGhostEnabled, saveDialectEnabled } from '../../../lib/dialectStorage';
+import { useAuth } from '../../../lib/auth/AuthContext';
 
 export default function SettingsScreen() {
   const router = useRouter();
+  const { signOut } = useAuth();
   const {
     myLanguage,
     myLanguageLabel,
@@ -29,6 +32,24 @@ export default function SettingsScreen() {
     installedGhostPacks,
     installedGlossaries,
   } = useAppStore();
+
+  const handleSignOut = async () => {
+    Alert.alert(
+      'Sign Out',
+      'Are you sure you want to sign out?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Sign Out',
+          style: 'destructive',
+          onPress: async () => {
+            await signOut();
+            router.replace('/auth');
+          },
+        },
+      ]
+    );
+  };
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
@@ -142,6 +163,14 @@ export default function SettingsScreen() {
             <Text style={styles.packRegion}>{pack.region || 'General'} • {pack.entries.length} entries</Text>
           </View>
         ))}
+      </View>
+
+      {/* Account */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>ACCOUNT</Text>
+        <TouchableOpacity style={styles.signOutButton} onPress={handleSignOut}>
+          <Text style={styles.signOutText}>🚪 Sign Out</Text>
+        </TouchableOpacity>
       </View>
 
       {/* About */}
@@ -261,4 +290,17 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
   },
   sdgText: { color: Colors.accent, fontSize: 12, fontWeight: '700' },
+  signOutButton: {
+    backgroundColor: Colors.surface,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: '#ff4444',
+    paddingVertical: 16,
+    alignItems: 'center',
+  },
+  signOutText: {
+    color: '#ff4444',
+    fontSize: 16,
+    fontWeight: '700',
+  },
 });
