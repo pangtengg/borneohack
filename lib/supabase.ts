@@ -90,24 +90,28 @@ export async function getAllReports(status?: string) {
   }
   const { data, error } = await query.order('created_at', { ascending: false });
   
-  if (error || !data) return [];
+  if (error) {
+    console.error('Error fetching reports from Supabase:', JSON.stringify(error));
+    throw error;
+  }
+  if (!data || data.length === 0) return [];
 
   // Fetch the profiles for all the user_ids in the reports
   const userIds = Array.from(new Set(data.map(r => r.user_id).filter(Boolean)));
   
   if (userIds.length > 0) {
-    const { data: profiles } = await supabase
-      .from('profiles')
-      .select('*')
-      .in('id', userIds);
+    // Fetch profiles and survivor_profiles in parallel
+    const [profilesRes, survivorProfilesRes] = await Promise.all([
+      supabase.from('profiles').select('*').in('id', userIds),
+      supabase.from('survivor_profiles').select('*').in('id', userIds)
+    ]);
 
-    const { data: survivorProfiles } = await supabase
-      .from('survivor_profiles')
-      .select('*')
-      .in('id', userIds);
+    // Log errors if they occurred, but don't fail the whole request
+    if (profilesRes.error) console.warn('Error fetching profiles:', profilesRes.error);
+    if (survivorProfilesRes.error) console.warn('Error fetching survivor profiles:', survivorProfilesRes.error);
       
-    const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
-    const survivorMap = new Map(survivorProfiles?.map(s => [s.id, s]) || []);
+    const profileMap = new Map(profilesRes.data?.map((p: any) => [p.id, p]) || []);
+    const survivorMap = new Map(survivorProfilesRes.data?.map((s: any) => [s.id, s]) || []);
 
     return data.map(report => ({
       ...report,

@@ -87,6 +87,7 @@ export default function ProfileScreen() {
         .upsert(
           {
             id: user.id,
+            role: profile?.role ?? 'survivor',
             legal_name: legalName.trim() || null,
             nationality: nationality.trim() || null,
             ic_passport: icPassport.trim() || null,

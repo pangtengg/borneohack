@@ -18,10 +18,11 @@ export default function AuthorityDashboardScreen() {
   const fetchReports = async () => {
     try {
       const data = await getAllReports();
+      console.log(`Fetched ${data?.length || 0} reports`);
       setReports(data || []);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching reports:', error);
-      Alert.alert('Error', 'Failed to fetch reports.');
+      Alert.alert('Error', `Failed to fetch reports. ${error?.message || JSON.stringify(error) || ''}`);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -78,7 +79,8 @@ export default function AuthorityDashboardScreen() {
   const getStatusColor = (status: string) => {
     switch (status?.toLowerCase()) {
       case 'resolved': return '#10B981'; // green
-      case 'responded': return '#F59E0B'; // yellow
+      case 'responded':
+      case 'responding': return '#F59E0B'; // yellow
       case 'pending': 
       default: return '#EF4444'; // red
     }
@@ -196,9 +198,9 @@ export default function AuthorityDashboardScreen() {
 
               <TouchableOpacity 
                 style={[styles.actionButton, { borderLeftColor: '#F59E0B' }]} 
-                onPress={() => updateStatus('responded')}
+                onPress={() => updateStatus('responding')}
               >
-                <Text style={styles.actionText}>Mark as Responded</Text>
+                <Text style={styles.actionText}>Mark as Responding</Text>
                 <View style={[styles.statusDot, { backgroundColor: '#F59E0B' }]} />
               </TouchableOpacity>
 
