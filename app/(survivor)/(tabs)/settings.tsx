@@ -13,9 +13,11 @@ import { Colors } from '../../../constants/colors';
 import { SUPPORTED_LANGUAGES } from '../../../constants/languages';
 import { useAppStore } from '../../../lib/store';
 import { saveGhostEnabled, saveDialectEnabled } from '../../../lib/dialectStorage';
+import { useAuth } from '../../../lib/auth/AuthContext';
 
 export default function SettingsScreen() {
   const router = useRouter();
+  const { signOut } = useAuth();
   const {
     myLanguage,
     myLanguageLabel,
@@ -142,6 +144,23 @@ export default function SettingsScreen() {
             <Text style={styles.packRegion}>{pack.region || 'General'} • {pack.entries.length} entries</Text>
           </View>
         ))}
+      </View>
+
+      {/* Logout */}
+      <View style={styles.section}>
+        <TouchableOpacity 
+          style={[styles.linkCard, { borderColor: Colors.danger }]} 
+          onPress={async () => {
+            await signOut();
+            router.replace('/');
+          }}
+        >
+          <Text style={styles.linkIcon}>🚪</Text>
+          <View style={styles.linkContent}>
+            <Text style={[styles.linkTitle, { color: Colors.danger }]}>Log Out</Text>
+            <Text style={styles.linkDesc}>Sign out of your account</Text>
+          </View>
+        </TouchableOpacity>
       </View>
 
       {/* About */}

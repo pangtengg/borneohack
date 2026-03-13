@@ -52,11 +52,11 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "402ebfc0-2c94-4763-b4a7-bebf23eea218"
+        "projectId": "3a514ffc-e36e-42f4-ad69-cdcf2db6d963"
       },
       "supabaseUrl": "https://pbpsqqvbjtyojxcgenqd.supabase.co",
       "supabaseAnonKey": "sb_publishable_bnmm0OYCtIdIvyw2knLJcg_lCj41RT3"
     },
-    "owner": "abelchinjh"
+    "owner": "ykang"
   }
 }

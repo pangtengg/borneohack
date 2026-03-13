@@ -1,34 +1,43 @@
-import { useEffect } from 'react';
-import { View, ActivityIndicator, StyleSheet } from 'react-native';
-import { useRouter } from 'expo-router';
+import { View, ActivityIndicator, StyleSheet, Text, TouchableOpacity } from 'react-native';
+import { Redirect, useRouter } from 'expo-router';
 import { Colors } from '../constants/colors';
 import { useAuth } from '../lib/auth/AuthContext';
 import { useProfile } from '../lib/auth/useProfile';
 
 export default function IndexScreen() {
-  const { session, loading: authLoading } = useAuth();
+  const { session, loading: authLoading, signOut } = useAuth();
   const { role, loading: profileLoading } = useProfile();
-  const router = useRouter();
 
-  useEffect(() => {
-    if (authLoading) return;
-    if (!session) {
-      router.replace('/auth' as any);
-      return;
-    }
-    if (profileLoading) return;
-    if (role === 'authority') {
-      router.replace('/(authority)' as any);
-    } else {
-      router.replace('/(survivor)/(tabs)' as any);
-    }
-  }, [session, authLoading, role, profileLoading, router]);
+  if (authLoading) {
+    return (
+      <View style={styles.splash}>
+        <ActivityIndicator size="large" color={Colors.accent} />
+        <Text style={styles.loadingText}>Initializing Auth...</Text>
+      </View>
+    );
+  }
 
-  return (
-    <View style={styles.splash}>
-      <ActivityIndicator size="large" color={Colors.accent} />
-    </View>
-  );
+  if (!session) {
+    return <Redirect href="/auth" />;
+  }
+
+  if (profileLoading) {
+    return (
+      <View style={styles.splash}>
+        <ActivityIndicator size="large" color={Colors.accent} />
+        <Text style={styles.loadingText}>Loading Profile...</Text>
+        <TouchableOpacity onPress={() => signOut()} style={styles.errorBtn}>
+          <Text style={styles.errorText}>Reset Session</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  if (role === 'authority') {
+    return <Redirect href="/(authority)" />;
+  }
+
+  return <Redirect href="/(survivor)/(tabs)" />;
 }
 
 const styles = StyleSheet.create({
@@ -37,5 +46,22 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
     justifyContent: 'center',
     alignItems: 'center',
+    gap: 16,
+  },
+  loadingText: {
+    color: Colors.textSecondary,
+    fontSize: 14,
+    letterSpacing: 1,
+  },
+  errorBtn: {
+    marginTop: 20,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: 8,
+  },
+  errorText: {
+    color: Colors.danger,
+    fontSize: 12,
   },
 });

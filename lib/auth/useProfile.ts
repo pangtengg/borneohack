@@ -45,19 +45,40 @@ export function useProfile() {
     let mounted = true;
 
     void (async () => {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .maybeSingle();
+      try {
+        let authData = await supabase
+          .from('authority_profiles')
+          .select('*')
+          .eq('id', user.id)
+          .maybeSingle();
 
-      if (!mounted) return;
-      if (error) {
+        if (!mounted) return;
+
+        if (authData.data) {
+          setProfile({ ...(authData.data as Profile), role: 'authority' });
+        } else {
+          let survData = await supabase
+            .from('survivor_profiles')
+            .select('*')
+            .eq('id', user.id)
+            .maybeSingle();
+            
+          if (!mounted) return;
+          
+          if (survData.data) {
+            setProfile({ ...(survData.data as Profile), role: 'survivor' });
+          } else {
+            setProfile(null);
+          }
+        }
+      } catch (err) {
+        console.error('Exception during profile fetch:', err);
         setProfile(null);
-      } else {
-        setProfile((data as Profile) ?? null);
+      } finally {
+        if (mounted) {
+          setLoading(false);
+        }
       }
-      setLoading(false);
     })();
 
     return () => {
