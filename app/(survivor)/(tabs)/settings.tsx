@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   TextInput,
   Switch,
+  Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Colors } from '../../../constants/colors';
@@ -31,6 +32,24 @@ export default function SettingsScreen() {
     installedGhostPacks,
     installedGlossaries,
   } = useAppStore();
+
+  const handleSignOut = async () => {
+    Alert.alert(
+      'Sign Out',
+      'Are you sure you want to sign out?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Sign Out',
+          style: 'destructive',
+          onPress: async () => {
+            await signOut();
+            router.replace('/auth');
+          },
+        },
+      ]
+    );
+  };
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
@@ -146,20 +165,11 @@ export default function SettingsScreen() {
         ))}
       </View>
 
-      {/* Logout */}
+      {/* Account */}
       <View style={styles.section}>
-        <TouchableOpacity 
-          style={[styles.linkCard, { borderColor: Colors.danger }]} 
-          onPress={async () => {
-            await signOut();
-            router.replace('/');
-          }}
-        >
-          <Text style={styles.linkIcon}>🚪</Text>
-          <View style={styles.linkContent}>
-            <Text style={[styles.linkTitle, { color: Colors.danger }]}>Log Out</Text>
-            <Text style={styles.linkDesc}>Sign out of your account</Text>
-          </View>
+        <Text style={styles.sectionTitle}>ACCOUNT</Text>
+        <TouchableOpacity style={styles.signOutButton} onPress={handleSignOut}>
+          <Text style={styles.signOutText}> Sign Out</Text>
         </TouchableOpacity>
       </View>
 
@@ -280,4 +290,17 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
   },
   sdgText: { color: Colors.accent, fontSize: 12, fontWeight: '700' },
+  signOutButton: {
+    backgroundColor: Colors.surface,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: '#ff4444',
+    paddingVertical: 16,
+    alignItems: 'center',
+  },
+  signOutText: {
+    color: '#ff4444',
+    fontSize: 16,
+    fontWeight: '700',
+  },
 });
