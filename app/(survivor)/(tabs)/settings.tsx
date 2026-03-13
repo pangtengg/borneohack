@@ -169,7 +169,7 @@ export default function SettingsScreen() {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>ACCOUNT</Text>
         <TouchableOpacity style={styles.signOutButton} onPress={handleSignOut}>
-          <Text style={styles.signOutText}>🚪 Sign Out</Text>
+          <Text style={styles.signOutText}> Sign Out</Text>
         </TouchableOpacity>
       </View>
 
