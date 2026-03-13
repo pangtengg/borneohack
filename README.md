@@ -2,8 +2,8 @@
 
 > **Real-Time Multilingual Voice Bridge for Disaster Response in Southeast Asia**
 > Built for BorneoHack — SDG 11 · SDG 10 · SDG 17
-- Report PDF Goodle Drive: 
-- Demo Video: (https://www.youtube.com/watch?v=VFgdZabLWTU)
+- Report PDF Goodle Drive: https://drive.google.com/file/d/1nA_KL7StGEsp1yVFpLJPaSgCOZXrlRAs/view?usp=sharing
+- Demo Video: https://www.youtube.com/watch?v=VFgdZabLWTU
 - Github: https://github.com/pangtengg/borneohack
   
 ---
