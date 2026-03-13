@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { Session, User } from '@supabase/supabase-js';
-import { supabase } from '../supabase';
+import { supabase } from '@/lib/supabase';
 
 type AuthContextType = {
   session: Session | null;
@@ -18,13 +18,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setLoading(false);
-    });
+    // Robust getSession: storage failures (e.g. SecureStore fallback) must not crash
+    supabase.auth
+      .getSession()
+      .then(({ data: { session } }) => {
+        setSession(session ?? null);
+      })
+      .catch((err) => {
+        console.warn('[Auth] getSession failed:', err);
+        setSession(null);
+      })
+      .finally(() => setLoading(false));
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
+      setSession(session ?? null);
       setLoading(false);
     });
 

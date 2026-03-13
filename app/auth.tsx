@@ -12,8 +12,8 @@ import {
 import { useRouter } from 'expo-router';
 import { Colors } from '../constants/colors';
 import { SUPPORTED_LANGUAGES } from '../constants/languages';
-import { useAuth } from '../lib/auth/AuthContext';
-import { supabase } from '../lib/supabase';
+import { useAuth } from '@/lib/auth/AuthContext';
+import { supabase } from '@/lib/supabase';
 
 type Role = 'survivor' | 'authority';
 type AuthMode = 'login' | 'signup';

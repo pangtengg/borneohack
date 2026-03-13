@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
-import { useAuth } from '../../lib/auth/AuthContext';
+import { useAuth } from '@/lib/auth/AuthContext';
 import { Colors } from '../../constants/colors';
 
 export default function AuthorityDashboardScreen() {

@@ -1,6 +1,6 @@
 // @ts-nocheck
 import React, { useEffect, useRef, useState } from 'react';
-import { useSession } from './hooks/useSession';
+import { useSession } from '@/lib/auth/useSession';
 import { useLocation } from './hooks/useLocation';
 import { LanguageSelector } from './components/LanguageSelector';
 import { MessageBubble } from './components/MessageBubble';

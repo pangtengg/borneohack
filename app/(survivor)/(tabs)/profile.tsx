@@ -10,9 +10,9 @@ import {
 } from 'react-native';
 import { Colors } from '../../../constants/colors';
 import { SUPPORTED_LANGUAGES } from '../../../constants/languages';
-import { useAuth } from '../../../lib/auth/AuthContext';
-import { useProfile } from '../../../lib/auth/useProfile';
-import { supabase } from '../../../lib/supabase';
+import { useAuth } from '@/lib/auth/AuthContext';
+import { useProfile } from '@/lib/auth/useProfile';
+import { supabase } from '@/lib/supabase';
 
 export default function ProfileScreen() {
   const { user } = useAuth();

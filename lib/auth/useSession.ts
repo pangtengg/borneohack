@@ -1,8 +1,8 @@
 // @ts-nocheck
 import { useState, useCallback, useRef } from 'react';
-import type { SessionState, Message, MessageRole, SupportedLanguageCode } from '../types';
-import { translateAndRewrite, synthesizeSpeech, playAudio } from '../api';
-import { generateSessionId, generateMessageId, detectPanicIndicators } from '../utils/helpers';
+import type { SessionState, Message, MessageRole, SupportedLanguageCode } from '../../types';
+import { translateAndRewrite, synthesizeSpeech, playAudio } from '../../api';
+import { generateSessionId, generateMessageId, detectPanicIndicators } from '../../utils/helpers';
 import { useSpeechRecognition } from './useSpeechRecognition';
 
 const defaultSession = (): SessionState => ({

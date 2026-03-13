@@ -1,18 +1,56 @@
-import { createClient } from '@supabase/supabase-js';
+// lib/supabase.ts
+// Uses AsyncStorage exclusively—avoids expo-secure-store (2048-byte limit, native linking issues)
+
+import 'react-native-url-polyfill/auto';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 
 const supabaseUrl = Constants.expoConfig?.extra?.supabaseUrl ?? '';
 const supabaseAnonKey = Constants.expoConfig?.extra?.supabaseAnonKey ?? '';
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    storage: AsyncStorage,
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: false,
+// Explicit AsyncStorage adapter—Supabase must not fall back to SecureStore
+const asyncStorageAdapter = {
+  getItem: async (key: string): Promise<string | null> => {
+    try {
+      const value = await AsyncStorage.getItem(key);
+      return value ?? null;
+    } catch (e) {
+      console.warn('[Supabase storage] getItem error:', key, e);
+      return null;
+    }
   },
-});
+  setItem: async (key: string, value: string): Promise<void> => {
+    try {
+      await AsyncStorage.setItem(key, value);
+    } catch (e) {
+      console.warn('[Supabase storage] setItem error:', key, e);
+    }
+  },
+  removeItem: async (key: string): Promise<void> => {
+    try {
+      await AsyncStorage.removeItem(key);
+    } catch (e) {
+      console.warn('[Supabase storage] removeItem error:', key, e);
+    }
+  },
+};
+
+function createSupabaseClient(): SupabaseClient {
+  if (!supabaseUrl || !supabaseAnonKey) {
+    console.warn('[Supabase] Missing URL or anon key. Auth will not work until app.json extra is configured.');
+  }
+  return createClient(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      storage: asyncStorageAdapter,
+      autoRefreshToken: true,
+      persistSession: true,
+      detectSessionInUrl: false,
+    },
+  });
+}
+
+export const supabase = createSupabaseClient();
 
 // ─── Helper: update GPS location ─────────────────────────────────────────────
 export async function updateLocation(
