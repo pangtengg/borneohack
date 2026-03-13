@@ -21,7 +21,7 @@ export default function ReportDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { profile } = useProfile();
-  const preferredLang = profile?.lang_reading ?? profile?.lang_speaking ?? 'en';
+  const preferredLang = profile?.preferred_language ?? 'en';
   const langInfo = getLanguageByCode(preferredLang);
 
   const [report, setReport] = useState<any>(null);

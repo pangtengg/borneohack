@@ -3,7 +3,27 @@ import { Router, Request, Response } from 'express';
 export const reportChatRouter = Router();
 
 const GROQ_CHAT_API = 'https://api.groq.com/openai/v1/chat/completions';
-const SYSTEM_PROMPT = `You are a disaster response assistant guiding survivors to create a structured emergency report for authorities.
+
+const LANG_NAMES: Record<string, string> = {
+  en: 'English',
+  ms: 'Malay (Bahasa Melayu)',
+  id: 'Indonesian (Bahasa Indonesia)',
+  th: 'Thai (ภาษาไทย)',
+  vi: 'Vietnamese (Tiếng Việt)',
+  tl: 'Filipino (Tagalog)',
+  my: 'Burmese (မြန်မာဘာသာ)',
+  km: 'Khmer (ភាសាខ្មែរ)',
+  zh: 'Chinese (中文)',
+  ar: 'Arabic (العربية)',
+};
+
+function buildSystemPrompt(lang: string): string {
+  const langName = LANG_NAMES[lang] ?? lang;
+  const langInstruction = lang !== 'en'
+    ? `\n\nCRITICAL LANGUAGE REQUIREMENT: You MUST respond ENTIRELY in ${langName} (language code: ${lang}). Every message you send — including the very first greeting — must be written in ${langName}. Do NOT use English at all unless the user writes to you in English.`
+    : '';
+
+  return `You are a disaster response assistant guiding survivors to create a structured emergency report for authorities.
 Ask ONE question at a time, in a calm, clear way.
 Follow this order:
 1. Location - Where are you? (address or landmark)
@@ -17,7 +37,8 @@ Follow this order:
 
 When the user answers, acknowledge briefly and ask the next question.
 When you have enough info (at least location, disaster type, severity), say "Report complete. Submitting to authorities."
-Output ONLY the next question or confirmation. Be concise.`;
+Output ONLY the next question or confirmation. Be concise.${langInstruction}`;
+}
 
 interface ChatMessage {
   role: 'user' | 'assistant' | 'system';
@@ -31,10 +52,9 @@ interface ReportChatBody {
 
 reportChatRouter.post('/', async (req: Request, res: Response) => {
   try {
-    // Report chat uses Groq for LLM (ElevenLabs does TTS/STT only; no chat API). Prefer GROQ_API_KEY.
-    const apiKey = process.env.GROQ_API_KEY || process.env.ELEVENLABS_API_KEY;
+    const apiKey = process.env.GROQ_API_KEY;
     if (!apiKey) {
-      res.status(500).json({ error: 'GROQ_API_KEY or ELEVENLABS_API_KEY not configured (required for Report chat)' });
+      res.status(500).json({ error: 'GROQ_API_KEY not configured (required for Report chat)' });
       return;
     }
 
@@ -44,11 +64,7 @@ reportChatRouter.post('/', async (req: Request, res: Response) => {
       ? messages
       : [{ role: 'user' as const, content: 'I need to make an emergency report.' }];
 
-    const langNote = preferredLanguage !== 'en'
-      ? `\n\nIMPORTANT: Respond in the user's preferred language: ${preferredLanguage}.`
-      : '';
-
-    const systemContent = SYSTEM_PROMPT + langNote;
+    const systemContent = buildSystemPrompt(preferredLanguage);
     const apiMessages: Array<{ role: string; content: string }> = [
       { role: 'system', content: systemContent },
       ...effectiveMessages.map((m) => ({ role: m.role, content: m.content })),
@@ -69,9 +85,9 @@ reportChatRouter.post('/', async (req: Request, res: Response) => {
 
     if (!response.ok) {
       const errText = await response.text();
-      console.error('[ElevenLabs/ReportChat]', response.status, errText);
+      console.error('[Groq/ReportChat]', response.status, errText);
       res.status(response.status).json({
-        error: `ElevenLabs API error: ${response.status}`,
+        error: `Groq API error: ${response.status}`,
       });
       return;
     }

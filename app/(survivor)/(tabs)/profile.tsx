@@ -14,50 +14,87 @@ import { useAuth } from '@/lib/auth/AuthContext';
 import { useProfile } from '@/lib/auth/useProfile';
 import { supabase } from '@/lib/supabase';
 import { useAppStore } from '@/lib/store';
+import { useT } from '@/lib/i18n';
+
+const GENDER_OPTIONS = ['Male', 'Female', 'Other'] as const;
 
 export default function ProfileScreen() {
   const { user } = useAuth();
-  const { profile } = useProfile();
+  const { profile, refetch } = useProfile();
+  const t = useT();
 
   const [displayName, setDisplayName] = useState('');
-  const [langReading, setLangReading] = useState('en');
-  const [langSpeaking, setLangSpeaking] = useState('en');
-  const [langListening, setLangListening] = useState('en');
+  const [preferredLang, setPreferredLang] = useState('en');
+
+  const [phone, setPhone] = useState('');
+  const [age, setAge] = useState('');
+  const [gender, setGender] = useState('');
+  const [nationality, setNationality] = useState('');
+  const [address, setAddress] = useState('');
+  const [medicalConditions, setMedicalConditions] = useState('');
+  const [emergencyName, setEmergencyName] = useState('');
+  const [emergencyPhone, setEmergencyPhone] = useState('');
+
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (profile) {
-      setDisplayName(profile.display_name ?? '');
-      setLangReading(profile.lang_reading ?? 'en');
-      setLangSpeaking(profile.lang_speaking ?? 'en');
-      setLangListening(profile.lang_listening ?? 'en');
-    }
+    if (!profile) return;
+    setDisplayName(profile.display_name ?? '');
+    setPreferredLang(profile.preferred_language ?? 'en');
+    setPhone(profile.phone_number ?? '');
+    setAge(profile.age != null ? String(profile.age) : '');
+    setGender(profile.gender ?? '');
+    setNationality(profile.nationality ?? '');
+    setAddress(profile.address ?? '');
+    setMedicalConditions(profile.medical_conditions ?? '');
+    const ec = profile.emergency_contacts?.[0];
+    setEmergencyName(ec?.name ?? '');
+    setEmergencyPhone(ec?.phone ?? '');
   }, [profile]);
 
   const handleSave = async () => {
     if (!user?.id) return;
     setSaving(true);
     try {
-      const { error } = await supabase
+      const emergencyContacts =
+        emergencyName.trim() || emergencyPhone.trim()
+          ? [{ name: emergencyName.trim(), phone: emergencyPhone.trim() }]
+          : null;
+
+      const { error: survErr } = await supabase
         .from('survivor_profiles')
         .upsert(
           {
             id: user.id,
             display_name: displayName.trim() || 'Survivor',
-            lang_reading: langReading,
-            lang_speaking: langSpeaking,
-            lang_listening: langListening,
+            preferred_language: preferredLang,
           },
           { onConflict: 'id' }
         );
-      if (error) throw error;
-      const lang = SUPPORTED_LANGUAGES.find((l) => l.code === langReading) ?? SUPPORTED_LANGUAGES[0];
-      useAppStore.getState().setMyLanguage(langReading, lang.label, lang.flag);
-      Alert.alert('Saved', 'Your profile has been updated.');
+      if (survErr) throw survErr;
+
+      const { error: profErr } = await supabase
+        .from('profiles')
+        .update({
+          phone_number: phone.trim() || null,
+          age: age.trim() ? parseInt(age, 10) : null,
+          gender: gender || null,
+          nationality: nationality.trim() || null,
+          address: address.trim() || null,
+          medical_conditions: medicalConditions.trim() || null,
+          emergency_contacts: emergencyContacts,
+        })
+        .eq('id', user.id);
+      if (profErr) throw profErr;
+
+      const lang = SUPPORTED_LANGUAGES.find((l) => l.code === preferredLang) ?? SUPPORTED_LANGUAGES[0];
+      useAppStore.getState().setMyLanguage(preferredLang, lang.label, lang.flag);
+
+      await refetch();
+      Alert.alert('Saved', t('profile.saved'));
     } catch (e) {
-      const err = e as { message?: string };
-      const msg = err?.message ?? (e instanceof Error ? e.message : 'Could not save profile.');
-      console.error('[Profile save]', err);
+      const msg = e instanceof Error ? e.message : 'Could not save profile.';
+      console.error('[Profile save]', e);
       Alert.alert('Error', msg);
     } finally {
       setSaving(false);
@@ -65,54 +102,105 @@ export default function ProfileScreen() {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.sectionTitle}>PROFILE</Text>
-      <View style={styles.inputGroup}>
-        <Text style={styles.inputLabel}>Display name</Text>
-        <TextInput
-          style={styles.input}
-          value={displayName}
-          onChangeText={setDisplayName}
-          placeholder="Your name or nickname"
-          placeholderTextColor={Colors.textMuted}
-        />
-      </View>
+    <ScrollView style={styles.container} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+      {/* PERSONAL INFORMATION */}
+      <Text style={styles.sectionTitle}>{t('profile.section.personal')}</Text>
 
-      <Text style={styles.sectionTitle}>PREFERRED LANGUAGES</Text>
-      <View style={styles.langSection}>
-        {(['Reading', 'Speaking', 'Listening'] as const).map((label, i) => {
-          const key = label.toLowerCase() as 'reading' | 'speaking' | 'listening';
-          const value = key === 'reading' ? langReading : key === 'speaking' ? langSpeaking : langListening;
-          const setter = key === 'reading' ? setLangReading : key === 'speaking' ? setLangSpeaking : setLangListening;
-          return (
-            <View key={key} style={styles.langRow}>
-              <Text style={styles.inputLabel}>{label}</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.langScroll}>
-                {SUPPORTED_LANGUAGES.map((lang) => (
-                  <TouchableOpacity key={lang.code} style={[styles.langChip, value === lang.code && styles.langChipActive]} onPress={() => setter(lang.code)}>
-                    <Text style={styles.langFlag}>{lang.flag}</Text>
-                    <Text style={[styles.langText, value === lang.code && { color: Colors.accent }]}>{lang.label}</Text>
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
+      <Field label={t('profile.display_name')}>
+        <TextInput style={styles.input} value={displayName} onChangeText={setDisplayName} placeholder="Your name or nickname" placeholderTextColor={Colors.textMuted} />
+      </Field>
+
+      <Field label={t('profile.email')}>
+        <View style={[styles.input, styles.inputReadonly]}>
+          <Text style={styles.readonlyText}>{user?.email ?? '—'}</Text>
+        </View>
+      </Field>
+
+      <Field label={t('profile.phone')}>
+        <TextInput style={styles.input} value={phone} onChangeText={setPhone} placeholder="+60 12-345 6789" placeholderTextColor={Colors.textMuted} keyboardType="phone-pad" />
+      </Field>
+
+      <View style={styles.row}>
+        <View style={styles.halfCol}>
+          <Field label={t('profile.age')}>
+            <TextInput style={styles.input} value={age} onChangeText={setAge} placeholder="25" placeholderTextColor={Colors.textMuted} keyboardType="number-pad" maxLength={3} />
+          </Field>
+        </View>
+        <View style={styles.halfCol}>
+          <Field label={t('profile.gender')}>
+            <View style={styles.chipRow}>
+              {GENDER_OPTIONS.map((g) => (
+                <TouchableOpacity key={g} style={[styles.chip, gender === g && styles.chipActive]} onPress={() => setGender(g)}>
+                  <Text style={[styles.chipText, gender === g && { color: Colors.accent }]}>{t(`common.${g.toLowerCase()}`)}</Text>
+                </TouchableOpacity>
+              ))}
             </View>
-          );
-        })}
+          </Field>
+        </View>
       </View>
 
+      <Field label={t('profile.nationality')}>
+        <TextInput style={styles.input} value={nationality} onChangeText={setNationality} placeholder="e.g. Malaysian" placeholderTextColor={Colors.textMuted} />
+      </Field>
+
+      {/* EMERGENCY INFORMATION */}
+      <Text style={[styles.sectionTitle, { marginTop: 12 }]}>{t('profile.section.emergency')}</Text>
+
+      <Field label={t('profile.address')}>
+        <TextInput style={[styles.input, styles.multiline]} value={address} onChangeText={setAddress} placeholder="Home / shelter address" placeholderTextColor={Colors.textMuted} multiline numberOfLines={2} />
+      </Field>
+
+      <Field label={t('profile.medical')}>
+        <TextInput style={[styles.input, styles.multiline]} value={medicalConditions} onChangeText={setMedicalConditions} placeholder="Allergies, chronic conditions, medications…" placeholderTextColor={Colors.textMuted} multiline numberOfLines={2} />
+      </Field>
+
+      <View style={styles.row}>
+        <View style={styles.halfCol}>
+          <Field label={t('profile.emergency.name')}>
+            <TextInput style={styles.input} value={emergencyName} onChangeText={setEmergencyName} placeholder="Name" placeholderTextColor={Colors.textMuted} />
+          </Field>
+        </View>
+        <View style={styles.halfCol}>
+          <Field label={t('profile.emergency.phone')}>
+            <TextInput style={styles.input} value={emergencyPhone} onChangeText={setEmergencyPhone} placeholder="Phone" placeholderTextColor={Colors.textMuted} keyboardType="phone-pad" />
+          </Field>
+        </View>
+      </View>
+
+      {/* PREFERRED LANGUAGE */}
+      <Text style={[styles.sectionTitle, { marginTop: 12 }]}>{t('profile.section.language')}</Text>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.langScroll}>
+        {SUPPORTED_LANGUAGES.map((lang) => (
+          <TouchableOpacity key={lang.code} style={[styles.langChip, preferredLang === lang.code && styles.langChipActive]} onPress={() => setPreferredLang(lang.code)}>
+            <Text style={styles.langFlag}>{lang.flag}</Text>
+            <Text style={[styles.langText, preferredLang === lang.code && { color: Colors.accent }]}>{lang.label}</Text>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
+
+      {/* SAVE */}
       <TouchableOpacity style={[styles.saveBtn, saving && styles.saveBtnDisabled]} onPress={handleSave} disabled={saving}>
-        <Text style={styles.saveBtnText}>{saving ? 'Saving...' : 'Save profile'}</Text>
+        <Text style={styles.saveBtnText}>{saving ? t('profile.saving') : t('profile.save')}</Text>
       </TouchableOpacity>
     </ScrollView>
   );
 }
 
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <View style={styles.field}>
+      <Text style={styles.fieldLabel}>{label}</Text>
+      {children}
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
-  content: { padding: 20, gap: 20, paddingBottom: 40 },
-  sectionTitle: { color: Colors.textMuted, fontSize: 11, fontWeight: '700', letterSpacing: 1.5 },
-  inputGroup: { gap: 12 },
-  inputLabel: { color: Colors.textSecondary, fontSize: 12, fontWeight: '600' },
+  content: { padding: 20, gap: 14, paddingBottom: 48 },
+  sectionTitle: { color: Colors.textMuted, fontSize: 11, fontWeight: '700', letterSpacing: 1.5, marginBottom: 2 },
+  field: { gap: 6 },
+  fieldLabel: { color: Colors.textSecondary, fontSize: 12, fontWeight: '600' },
   input: {
     backgroundColor: Colors.surface,
     borderRadius: 10,
@@ -120,12 +208,26 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
     color: Colors.textPrimary,
     paddingHorizontal: 14,
-    paddingVertical: 12,
+    paddingVertical: 11,
     fontSize: 14,
   },
-  langSection: { gap: 12 },
-  langRow: { gap: 8 },
-  langScroll: { flexDirection: 'row', gap: 8 },
+  inputReadonly: { backgroundColor: Colors.surfaceElevated },
+  readonlyText: { color: Colors.textSecondary, fontSize: 14 },
+  multiline: { minHeight: 56, textAlignVertical: 'top' },
+  row: { flexDirection: 'row', gap: 12 },
+  halfCol: { flex: 1 },
+  chipRow: { flexDirection: 'row', gap: 8 },
+  chip: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 10,
+    backgroundColor: Colors.surface,
+    borderWidth: 1.5,
+    borderColor: Colors.border,
+  },
+  chipActive: { borderColor: Colors.accent, backgroundColor: `${Colors.accent}22` },
+  chipText: { color: Colors.textSecondary, fontSize: 13, fontWeight: '600' },
+  langScroll: { flexDirection: 'row', gap: 8, paddingVertical: 4 },
   langChip: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -140,7 +242,7 @@ const styles = StyleSheet.create({
   langChipActive: { borderColor: Colors.accent, backgroundColor: `${Colors.accent}22` },
   langFlag: { fontSize: 18 },
   langText: { color: Colors.textSecondary, fontSize: 13, fontWeight: '600' },
-  saveBtn: { backgroundColor: Colors.accent, borderRadius: 12, paddingVertical: 16, alignItems: 'center' },
+  saveBtn: { backgroundColor: Colors.accent, borderRadius: 12, paddingVertical: 16, alignItems: 'center', marginTop: 8 },
   saveBtnDisabled: { opacity: 0.7 },
   saveBtnText: { color: Colors.background, fontSize: 16, fontWeight: '700' },
 });

@@ -1,12 +1,11 @@
 import { Tabs } from 'expo-router';
+import { Text } from 'react-native';
 import { Colors } from '../../../constants/colors';
-
-function TabIcon({ icon, isActive }: { icon: string; isActive?: boolean }) {
-  const { Text } = require('react-native');
-  return <Text style={{ fontSize: 22, opacity: isActive ? 1 : 0.5 }}>{icon}</Text>;
-}
+import { useT } from '@/lib/i18n';
 
 export default function SurvivorTabLayout() {
+  const t = useT();
+
   return (
     <Tabs
       screenOptions={{
@@ -30,25 +29,25 @@ export default function SurvivorTabLayout() {
         name="index"
         options={{
           title: 'VoiceBridge',
-          tabBarLabel: 'Home',
-          tabBarIcon: ({ color }) => <TabIcon icon="🏠" isActive={color === Colors.accent} />,
+          tabBarLabel: t('tab.home'),
+          tabBarIcon: ({ color }) => <Text style={{ fontSize: 22, opacity: color === Colors.accent ? 1 : 0.5 }}>🏠</Text>,
           headerTitle: '🌏 VoiceBridge',
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
-          title: 'Profile',
-          tabBarLabel: 'Profile',
-          tabBarIcon: ({ color }) => <TabIcon icon="👤" isActive={color === Colors.accent} />,
+          title: t('tab.profile'),
+          tabBarLabel: t('tab.profile'),
+          tabBarIcon: ({ color }) => <Text style={{ fontSize: 22, opacity: color === Colors.accent ? 1 : 0.5 }}>👤</Text>,
         }}
       />
       <Tabs.Screen
         name="settings"
         options={{
-          title: 'Settings',
-          tabBarLabel: 'Settings',
-          tabBarIcon: ({ color }) => <TabIcon icon="⚙️" isActive={color === Colors.accent} />,
+          title: t('tab.settings'),
+          tabBarLabel: t('tab.settings'),
+          tabBarIcon: ({ color }) => <Text style={{ fontSize: 22, opacity: color === Colors.accent ? 1 : 0.5 }}>⚙️</Text>,
         }}
       />
     </Tabs>

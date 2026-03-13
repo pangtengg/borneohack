@@ -29,6 +29,10 @@ interface AppState {
   targetLanguageFlag: string;
   setTargetLanguage: (code: string, label: string, flag: string) => void;
 
+  // UI translations (set by i18n fetch, shared across all components)
+  uiTranslations: Record<string, string>;
+  setUiTranslations: (t: Record<string, string>) => void;
+
   // Panic mode
   panicMode: boolean;
   setPanicMode: (on: boolean) => void;
@@ -81,6 +85,10 @@ export const useAppStore = create<AppState>((set) => ({
   targetLanguageFlag: '🇲🇾',
   setTargetLanguage: (code, label, flag) =>
     set({ targetLanguage: code, targetLanguageLabel: label, targetLanguageFlag: flag }),
+
+  // UI translations
+  uiTranslations: {},
+  setUiTranslations: (t) => set({ uiTranslations: t }),
 
   // Panic mode
   panicMode: false,

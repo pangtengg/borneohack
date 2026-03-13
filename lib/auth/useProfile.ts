@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from './AuthContext';
 
@@ -7,10 +7,19 @@ export type UserRole = 'survivor' | 'authority';
 export interface Profile {
   id: string;
   role: UserRole;
+  // survivor_profiles
   display_name?: string;
-  lang_reading?: string;
-  lang_speaking?: string;
-  lang_listening?: string;
+  preferred_language?: string;
+  // profiles (personal info)
+  email?: string;
+  phone_number?: string;
+  age?: number;
+  gender?: string;
+  nationality?: string;
+  address?: string;
+  medical_conditions?: string;
+  emergency_contacts?: Array<{ name: string; phone: string }>;
+  // authority_profiles
   full_name?: string;
   service_name?: string;
   rank?: string;
@@ -29,60 +38,58 @@ export function useProfile() {
 
   const role: UserRole = (profile?.role as UserRole) ?? 'survivor';
 
-  useEffect(() => {
+  const fetchProfile = useCallback(async () => {
     if (!user?.id) {
       setProfile(null);
       setLoading(false);
       return;
     }
 
-    let mounted = true;
+    const { data: authData } = await supabase
+      .from('authority_profiles')
+      .select('*')
+      .eq('id', user.id)
+      .maybeSingle();
 
-    void (async () => {
-      // Check authority_profiles first; if found, user is authority
-      const { data: authData } = await supabase
-        .from('authority_profiles')
-        .select('*')
-        .eq('id', user.id)
-        .maybeSingle();
-
-      if (!mounted) return;
-
-      if (authData) {
-        setProfile({
-          id: user.id,
-          role: 'authority',
-          service_name: authData.service_name,
-          ...authData,
-        } as Profile);
-        setLoading(false);
-        return;
-      }
-
-      // Else fetch survivor_profiles (schema: id, display_name, created_at, lang_*)
-      const { data: survData, error } = await supabase
-        .from('survivor_profiles')
-        .select('id, display_name, lang_reading, lang_speaking, lang_listening')
-        .eq('id', user.id)
-        .maybeSingle();
-
-      if (!mounted) return;
-      if (error) {
-        setProfile(null);
-      } else {
-        setProfile(
-          survData
-            ? ({ id: user.id, role: 'survivor', ...survData } as Profile)
-            : ({ id: user.id, role: 'survivor' } as Profile)
-        );
-      }
+    if (authData) {
+      setProfile({
+        id: user.id,
+        role: 'authority',
+        email: user.email,
+        ...authData,
+      } as Profile);
       setLoading(false);
-    })();
+      return;
+    }
 
-    return () => {
-      mounted = false;
-    };
-  }, [user?.id]);
+    const [survResult, personalResult] = await Promise.all([
+      supabase
+        .from('survivor_profiles')
+        .select('id, display_name, preferred_language')
+        .eq('id', user.id)
+        .maybeSingle(),
+      supabase
+        .from('profiles')
+        .select('age, gender, nationality, address, medical_conditions, emergency_contacts, phone_number')
+        .eq('id', user.id)
+        .maybeSingle(),
+    ]);
 
-  return { profile, role, loading };
+    const merged: Profile = {
+      id: user.id,
+      role: 'survivor',
+      email: user.email,
+      ...(personalResult.data ?? {}),
+      ...(survResult.data ?? {}),
+    } as Profile;
+
+    setProfile(merged);
+    setLoading(false);
+  }, [user?.id, user?.email]);
+
+  useEffect(() => {
+    fetchProfile();
+  }, [fetchProfile]);
+
+  return { profile, role, loading, refetch: fetchProfile };
 }
