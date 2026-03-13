@@ -63,7 +63,9 @@ export default function SurvivorHomeScreen() {
           <View style={styles.locationRow}>
             <Text style={styles.locationFlag}>{detectedCountry.flag}</Text>
             <View>
-              <Text style={styles.locationName}>{detectedCountry.name}</Text>
+              <Text style={styles.locationName}>
+                {detectedCountry.name}{detectedCountry.region ? `, ${detectedCountry.region}` : ''}
+              </Text>
               <Text style={styles.locationLang}>
                 Language: {detectedCountry.langFlag} {detectedCountry.langLabel}
               </Text>

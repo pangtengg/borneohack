@@ -14,6 +14,8 @@ import { Colors } from '../constants/colors';
 import { SUPPORTED_LANGUAGES } from '../constants/languages';
 import { useAuth } from '../lib/auth/AuthContext';
 import { supabase } from '../lib/supabase';
+import { detectCountry } from '../lib/countryDetect';
+import { useAppStore } from '../lib/store';
 
 type Role = 'survivor' | 'authority';
 type AuthMode = 'login' | 'signup';
@@ -53,17 +55,26 @@ export default function AuthScreen() {
           const { error: signInError } = await signIn(email.trim(), password);
           if (signInError) {
             setError(signInError.message);
+            setLoading(false);
             return;
           }
+          // Detect location on login to update context
+          const country = await detectCountry();
+          useAppStore.getState().setDetectedCountry(country);
           router.replace('/(survivor)/(tabs)' as any);
         } else {
           const { error: signUpError } = await signUp(email.trim(), password);
           if (signUpError) {
             setError(signUpError.message);
+            setLoading(false);
             return;
           }
           const { data: { user } } = await supabase.auth.getUser();
           if (user) {
+            // Detect location to pre-fill profile data
+            const country = await detectCountry();
+            useAppStore.getState().setDetectedCountry(country);
+            
             await supabase
               .from('profiles')
               .upsert(
@@ -73,6 +84,7 @@ export default function AuthScreen() {
                   lang_reading: langReading,
                   lang_speaking: langSpeaking,
                   lang_listening: langListening,
+                  nationality: country.name !== 'Unknown' ? country.name : undefined,
                 },
                 { onConflict: 'id' }
               );

@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Location from 'expo-location';
 
 export interface CountryInfo {
     code: string;
@@ -8,6 +9,9 @@ export interface CountryInfo {
     langLabel: string;
     langFlag: string;
     status: 'online' | 'cached' | 'failed';
+    region?: string;
+    latitude?: number;
+    longitude?: number;
 }
 
 export const COUNTRY_MAP: Record<string, Omit<CountryInfo, 'status'>> = {
@@ -76,20 +80,49 @@ export async function detectCountry(): Promise<CountryInfo> {
         return { ...COUNTRY_MAP[override], status: 'online' };
     }
 
-    // 2. Try IP detection
+    // 2. Try High-Precision GPS first (if permissions granted)
+    try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status === 'granted') {
+            const loc = await Location.getCurrentPositionAsync({
+                accuracy: Location.Accuracy.Balanced,
+            });
+            const [place] = await Location.reverseGeocodeAsync({
+                latitude: loc.coords.latitude,
+                longitude: loc.coords.longitude,
+            });
+            
+            const gpsCode = place?.isoCountryCode;
+            if (gpsCode && COUNTRY_MAP[gpsCode]) {
+                const info = { 
+                    ...COUNTRY_MAP[gpsCode], 
+                    region: place.region || place.city || undefined,
+                    latitude: loc.coords.latitude,
+                    longitude: loc.coords.longitude,
+                    status: 'online' as const 
+                };
+                await setCachedCountry(gpsCode);
+                return info;
+            }
+        }
+    } catch (e) {
+        console.warn('GPS detection failed, falling back to IP:', e);
+    }
+
+    // 3. Try IP detection fallback
     const ipCode = await fetchCountryFromIP();
     if (ipCode && COUNTRY_MAP[ipCode]) {
         await setCachedCountry(ipCode);
         return { ...COUNTRY_MAP[ipCode], status: 'online' };
     }
 
-    // 3. Fall back to cached
+    // 4. Fall back to cached
     const cached = await getCachedCountry();
     if (cached && COUNTRY_MAP[cached]) {
         return { ...COUNTRY_MAP[cached], status: 'cached' };
     }
 
-    // 4. Failed entirely
+    // 5. Failed entirely
     return {
         code: 'XX',
         name: 'Unknown',

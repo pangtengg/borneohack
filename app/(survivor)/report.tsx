@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Colors } from '../../constants/colors';
 import { PhraseBankGrid } from '../../components/PhraseBankGrid';
@@ -7,10 +7,14 @@ import { EMERGENCY_PHRASES, Phrase } from '../../constants/phrases';
 import { translatePhrase } from '../../lib/api';
 import { playBase64Audio } from '../../lib/audioPlayer';
 import { useAppStore } from '../../lib/store';
+import { createReport, updateLocation } from '../../lib/supabase';
+import { useAuth } from '../../lib/auth/AuthContext';
 
 export default function ReportScreen() {
   const router = useRouter();
-  const { targetLanguage } = useAppStore();
+  const { user } = useAuth();
+  const { targetLanguage, detectedCountry } = useAppStore();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [phraseLoadingKey, setPhraseLoadingKey] = useState<string | null>(null);
   const [phrasePlayingKey, setPhrasePlayingKey] = useState<string | null>(null);
 
@@ -22,8 +26,31 @@ export default function ReportScreen() {
       const result = await translatePhrase({ phraseKey: phrase.key, phraseText: phrase.text, targetLang: targetLanguage });
       setPhrasePlayingKey(phrase.key);
       await playBase64Audio(result.audioBase64);
+
+      // Automatically submit report based on phrase
+      if (user) {
+        setIsSubmitting(true);
+        const { error } = await createReport({
+          user_id: user.id,
+          category: phrase.category === 'children' ? 'vulnerable' : phrase.category,
+          description: `Emergency phrase triggered: ${phrase.text}`,
+          urgency: phrase.urgency || 5,
+          original_language: targetLanguage || 'en',
+          latitude: detectedCountry?.latitude,
+          longitude: detectedCountry?.longitude,
+          location_address: detectedCountry?.region || detectedCountry?.name,
+        });
+        setIsSubmitting(false);
+        if (error) {
+          Alert.alert('Error', error.message || 'Failed to submit report. Please try again.');
+          console.error('Report submission error:', error);
+        } else {
+          Alert.alert('Success', 'Report successfully sent to authorities.');
+        }
+      }
     } catch {
       setPhraseLoadingKey(null);
+      setIsSubmitting(false);
     } finally {
       setPhraseLoadingKey(null);
       setTimeout(() => setPhrasePlayingKey(null), 3000);

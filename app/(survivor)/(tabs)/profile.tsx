@@ -58,33 +58,57 @@ export default function ProfileScreen() {
   }, [profile]);
 
   const handleSave = async () => {
-    if (!user?.id) return;
+    if (!user?.id) {
+      Alert.alert('Error', 'You must be logged in to save your profile.');
+      return;
+    }
+    
     setSaving(true);
     try {
+      // Validate emergency contacts JSON if it's not empty
+      let parsedEmergencyContacts = null;
+      if (emergencyContacts.trim()) {
+        try {
+          parsedEmergencyContacts = JSON.parse(emergencyContacts);
+        } catch (e) {
+          // If it's not valid JSON, we should probably warn the user
+          // instead of just sending it as a string to a jsonb column
+          Alert.alert(
+            'Invalid Format', 
+            'Emergency contacts must be in valid JSON format, e.g. [{"name": "John", "phone": "123"}].'
+          );
+          setSaving(false);
+          return;
+        }
+      }
+
       const { error } = await supabase
         .from('profiles')
         .upsert(
           {
             id: user.id,
-            legal_name: legalName || null,
-            nationality: nationality || null,
-            ic_passport: icPassport || null,
+            legal_name: legalName.trim() || null,
+            nationality: nationality.trim() || null,
+            ic_passport: icPassport.trim() || null,
             age: age ? parseInt(age, 10) : null,
-            gender: gender || null,
-            race: race || null,
-            religion: religion || null,
-            address: address || null,
-            medical_conditions: medicalConditions || null,
-            emergency_contacts: emergencyContacts.trim() ? tryParseJson(emergencyContacts) : null,
+            gender: gender.trim() || null,
+            race: race.trim() || null,
+            religion: religion.trim() || null,
+            address: address.trim() || null,
+            medical_conditions: medicalConditions.trim() || null,
+            emergency_contacts: parsedEmergencyContacts,
             lang_reading: langReading,
             lang_speaking: langSpeaking,
             lang_listening: langListening,
+            updated_at: new Date().toISOString(),
           },
           { onConflict: 'id' }
         );
+        
       if (error) throw error;
-      Alert.alert('Saved', 'Your profile has been updated.');
+      Alert.alert('Success', 'Your profile has been updated.');
     } catch (e) {
+      console.error('Save profile error:', e);
       Alert.alert('Error', e instanceof Error ? e.message : 'Could not save profile.');
     } finally {
       setSaving(false);
@@ -146,13 +170,6 @@ export default function ProfileScreen() {
   );
 }
 
-function tryParseJson(str: string): unknown {
-  try {
-    return JSON.parse(str);
-  } catch {
-    return str;
-  }
-}
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },

@@ -104,8 +104,8 @@ export default function ConvoScreen() {
 
         const result = await translateSpeech({
           audioBase64,
-          latitude: 3.14,
-          longitude: 101.68,
+          latitude: detectedCountry?.latitude ?? 0,
+          longitude: detectedCountry?.longitude ?? 0,
           myLanguage,
           targetLanguage: targetLang,
         });
@@ -192,8 +192,8 @@ export default function ConvoScreen() {
           if (audioData) {
             const result = await translateSpeech({
               audioBase64: audioData.base64,
-              latitude: 3.14,
-              longitude: 101.68,
+              latitude: detectedCountry?.latitude ?? 0,
+              longitude: detectedCountry?.longitude ?? 0,
               myLanguage,
               targetLanguage,
             });

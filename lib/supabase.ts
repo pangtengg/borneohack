@@ -88,7 +88,34 @@ export async function getAllReports(status?: string) {
   if (status) {
     query = query.eq('status', status);
   }
-  const { data } = await query.order('created_at', { ascending: false });
+  const { data, error } = await query.order('created_at', { ascending: false });
+  
+  if (error || !data) return [];
+
+  // Fetch the profiles for all the user_ids in the reports
+  const userIds = Array.from(new Set(data.map(r => r.user_id).filter(Boolean)));
+  
+  if (userIds.length > 0) {
+    const { data: profiles } = await supabase
+      .from('profiles')
+      .select('*')
+      .in('id', userIds);
+
+    const { data: survivorProfiles } = await supabase
+      .from('survivor_profiles')
+      .select('*')
+      .in('id', userIds);
+      
+    const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
+    const survivorMap = new Map(survivorProfiles?.map(s => [s.id, s]) || []);
+
+    return data.map(report => ({
+      ...report,
+      profile: report.user_id ? profileMap.get(report.user_id) : null,
+      survivor_profile: report.user_id ? survivorMap.get(report.user_id) : null,
+    }));
+  }
+
   return data;
 }
 

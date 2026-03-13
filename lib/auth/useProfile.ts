@@ -46,6 +46,17 @@ export function useProfile() {
 
     void (async () => {
       try {
+        // Fetch common base profile
+        const { data: baseProfile, error: baseError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .maybeSingle();
+
+        if (!mounted) return;
+        if (baseError) throw baseError;
+
+        // Try to fetch role-specific data
         let authData = await supabase
           .from('authority_profiles')
           .select('*')
@@ -55,7 +66,7 @@ export function useProfile() {
         if (!mounted) return;
 
         if (authData.data) {
-          setProfile({ ...(authData.data as Profile), role: 'authority' });
+          setProfile({ ...baseProfile, ...authData.data, role: 'authority' });
         } else {
           let survData = await supabase
             .from('survivor_profiles')
@@ -66,9 +77,9 @@ export function useProfile() {
           if (!mounted) return;
           
           if (survData.data) {
-            setProfile({ ...(survData.data as Profile), role: 'survivor' });
+            setProfile({ ...baseProfile, ...survData.data, role: 'survivor' });
           } else {
-            setProfile(null);
+            setProfile(baseProfile as Profile || null);
           }
         }
       } catch (err) {
