@@ -2,7 +2,10 @@
 
 > **Real-Time Multilingual Voice Bridge for Disaster Response in Southeast Asia**
 > Built for BorneoHack — SDG 11 · SDG 10 · SDG 17
-
+- Report Goodle Drive: 
+- Demo Video:
+- Github: https://github.com/pangtengg/borneohack
+  
 ---
 
 ## Why VoiceBridge?
