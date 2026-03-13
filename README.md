@@ -89,34 +89,50 @@ borneohack/
 
 ---
 
+## Objectives
+
+- **Bridge Language Barriers**: Neutralize communication gaps in Southeast Asia's linguistically diverse regions during critical disaster windows.
+- **Ensure Psychological Stability**: Use stress-adaptive, calm, and authoritative voice synthesis to reduce panic and drive compliance during rescue operations.
+- **Data-Driven Triage**: Provide authorities with instant access to survivor medical data, demographics, and real-time location for optimized response.
+- **Zero-Config Accessibility**: Automate language and dialect detection via GPS to ensure the app is usable the moment it is opened, with zero setup required during stress.
+
+---
+
 ## Key Features
 
-### Zero-Friction Setup
-- GPS auto-detects the dominant local language and dialect on launch, no language menu to navigate in a panic. (e.g., distinguishing between standard Malay and specific Bornean dialects).
-- Includes manual fallback modals if GPS fails.
-- Covers 14 SE Asian language regions: Malay, Indonesian, Thai, Vietnamese, Filipino, Burmese, Khmer, Lao, and more
+### 🚀 Zero-Friction Setup
+- **GPS-Authored Context**: Auto-detects the dominant local language and dialect (e.g., distinguishing standard Malay from Bornean dialects) on launch.
+- **Manual Overrides**: Robust manual fallback modals for areas with poor GPS signaling.
+- **Broad Coverage**: Support for 14 Southeast Asian regions including Malay, Indonesian, Thai, Vietnamese, Filipino, Burmese, Khmer, Lao, and more.
 
-### Stress-Adaptive Voice Output
-- ElevenLabs Multilingual v2 synthesizes all output using a single pre-configured **calm, authoritative "relief coordinator" voice**
-- Strips panic from the output tone — a panicking survivor's voice becomes a clear, calm command for rescuers
+### 🎙️ Stress-Adaptive Voice Output
+- **Calm Authority**: ElevenLabs Multilingual v2 synthesizes all output using a pre-configured, steady "relief coordinator" voice.
+- **Tone Neutralization**: Automatically strips panic from survivor inputs — a frantic cry for help is delivered to responders as a clear, actionable instruction.
 
-### Glossary Patching & Ghost Matching
-- Translates not just standard languages, but patches specific regional vocabularies using custom glossary maps.
-- Ensures highly accurate local context is maintained during translations.
+### 🧩 Glossary Patching & Ghost Matching
+- **Localized Accuracy**: Translates not just standard languages, but patches specific regional vocabularies using custom glossary maps.
+- **Contextual Integrity**: Ensures that local names for locations or specific emergency terms are preserved and accurately translated.
 
-### Role-Based Access (Supabase Auth)
+### 👮 Authority Dashboard (New UI)
+- **Real-Time Command Center**: A centralized feed for emergency responders to view incoming reports, status updates, and survivor details.
+- **Integrated Identity**: Instant lookups of survivor profiles including legal name, age, gender, and critical medical conditions directly on each report.
+- **Visual Status Tracking**: Color-coded prioritization (🔴 Pending, 🟡 Responding, 🟢 Resolved) for efficient resource allocation.
+- **Precision Dispatch**: Integrated "View on Map" functionality to open precise survivor GPS coordinates in navigation apps.
+- **Bilingual Review**: Responders can view both the original source description and the AI-translated text for maximum context.
+
+### 👤 Role-Based Access
 | Role | Who uses it | How it works |
 |------|-------------|---------------|
-| **Survivor** | Person in distress | Sign up before disaster. Three actions: **Report** (AI voice flow), **Convo** (voice/text with officers), **Broadcast** (location-based alerts). Profile stores personal info in cloud DB. |
-| **Authority** | Emergency responder | Login only (org pre-creates accounts). Dashboard to view incoming reports, add notes, update status. |
+| **Survivor** | Person in distress | Sign up before disaster. Three actions: **Report** (AI voice flow), **Convo** (voice/text with officers), **Broadcast** (alerts). |
+| **Authority** | Emergency responder | Dashboard access. View, triage, and manage reports with integrated survivor medical data. |
 
-### Quick Phrases in Report & Convo
-Pre-translated critical phrases with instant playback — easy-to-tap buttons during active STT/TTS sessions:
+### ⚡ Quick Phrases
+Pre-translated critical phrases with instant playback for high-stress situations:
 - "I am trapped under rubble"
 - "I need medical help"
 - "I have children with me"
 - "Where is the evacuation point?"
-- 12 more phrases across Medical, Rescue, Evacuation, and Vulnerable Person categories
+- 12+ more across Medical, Rescue, Evacuation, and Vulnerable Person categories.
 
 ---
 
