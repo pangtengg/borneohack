@@ -38,7 +38,7 @@ export function CountryPickerModal({ visible, onClose, onSelect, currentCountry 
                                     styles.countryItem,
                                     currentCountry?.code === country.code && styles.countryItemActive,
                                 ]}
-                                onPress={() => onSelect({ ...country, status: 'online' })}
+                                onPress={() => onSelect({ ...country, status: 'online' } as CountryInfo)}
                             >
                                 <Text style={styles.flag}>{country.flag}</Text>
                                 <Text style={styles.name}>{country.name}</Text>

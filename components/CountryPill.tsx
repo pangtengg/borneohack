@@ -8,13 +8,16 @@ interface Props {
     onPress: () => void;
 }
 
+const STATUS_BORDER_COLORS: Record<CountryInfo['status'], string> = {
+    online: Colors.success,
+    cached: Colors.warning,
+    failed: Colors.danger,
+};
+
 export function CountryPill({ country, onPress }: Props) {
     if (!country) return null;
 
-    let borderColor: string = Colors.border;
-    if (country.status === 'online') borderColor = Colors.success;
-    else if (country.status === 'cached') borderColor = Colors.warning;
-    else if (country.status === 'failed') borderColor = Colors.danger;
+    const borderColor = STATUS_BORDER_COLORS[country.status] ?? Colors.border;
 
     return (
         <TouchableOpacity style={[styles.container, { borderColor }]} onPress={onPress}>

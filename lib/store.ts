@@ -45,6 +45,7 @@ interface AppState {
 
   // Dialect Bank: per-dialect selection for STT
   enabledDialectNames: string[];
+  setEnabledDialectNames: (names: string[]) => void;
   toggleDialectEnabled: (dialectName: string) => void;
 }
 
@@ -100,5 +101,14 @@ export const useAppStore = create<AppState>((set) => ({
   addGlossaryPack: (pack) =>
     set((state) => ({
       installedGlossaries: [...state.installedGlossaries.filter(p => p.packId !== pack.packId), pack],
+    })),
+
+  enabledDialectNames: [],
+  setEnabledDialectNames: (names) => set({ enabledDialectNames: names }),
+  toggleDialectEnabled: (dialectName) =>
+    set((state) => ({
+      enabledDialectNames: state.enabledDialectNames.includes(dialectName)
+        ? state.enabledDialectNames.filter((n) => n !== dialectName)
+        : [...state.enabledDialectNames, dialectName],
     })),
 }));

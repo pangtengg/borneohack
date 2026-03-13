@@ -10,6 +10,7 @@ import {
     Platform,
     ScrollView,
     ActivityIndicator,
+    Alert,
 } from 'react-native';
 import { Colors } from '../constants/colors';
 import { PHRASE_CATEGORIES } from '../constants/phrases';
@@ -23,7 +24,7 @@ interface Props {
 export function ManualFallbackModal({ visible, onClose, onTranslateAndSpeak }: Props) {
     const [text, setText] = useState('');
     const [isProcessing, setIsProcessing] = useState(false);
-    const [activeTab, setActiveTab] = useState<string>(PHRASE_CATEGORIES[0].id);
+    const [activeTab, setActiveTab] = useState<string>(PHRASE_CATEGORIES[0].id as string);
 
     const handleSubmit = async () => {
         if (!text.trim() || isProcessing) return;
