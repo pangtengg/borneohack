@@ -86,18 +86,34 @@ export async function getLatestLocation(userId: string) {
 // ─── Helper: create a report ─────────────────────────────────────────────────
 export async function createReport(report: {
   user_id?: string;
-  category: string;
+  category?: string;
   description?: string;
   urgency?: number;
   latitude?: number;
   longitude?: number;
   location_address?: string;
-  original_language?: string;
-  transcription?: string;
-  translation?: string;
-  media_urls?: string[];
+  disaster_type?: string;
+  severity?: number;
+  people_affected?: number;
+  injuries_critical?: string;
+  immediate_needs?: string;
+  qa_pairs?: Array<{ question: string; answer: string }>;
+  preferred_language?: string;
+  status?: string;
+  [key: string]: unknown;
 }) {
   return supabase.from('reports').insert(report).select().single();
+}
+
+// ─── Helper: get single report by id ───────────────────────────────────────────
+export async function getReportById(reportId: string) {
+  const { data, error } = await supabase
+    .from('reports')
+    .select('*')
+    .eq('id', reportId)
+    .single();
+  if (error) return null;
+  return data;
 }
 
 // ─── Helper: get reports for a user ──────────────────────────────────────────
@@ -133,19 +149,6 @@ export async function updateReportStatus(
   return supabase.from('reports').update(update).eq('id', reportId);
 }
 
-// ─── Helper: log translation ─────────────────────────────────────────────────
-export async function logTranslation(log: {
-  layer_used: string;
-  raw_transcript?: string;
-  detected_lang?: string;
-  patched_text?: string;
-  final_output?: string;
-  confidence?: number;
-  session_id?: string;
-}) {
-  return supabase.from('translation_logs').insert(log);
-}
-
 // ─── Helper: get survivor profile ────────────────────────────────────────────
 export async function getSurvivorProfile(userId: string) {
   const { data } = await supabase
@@ -165,3 +168,130 @@ export async function getAuthorityProfile(userId: string) {
     .single();
   return data;
 }
+
+// ─── Conversations (survivor ↔ authority messaging) ─────────────────────────
+export async function getSurvivorConversations(survivorId: string) {
+  const { data } = await supabase
+    .from('conversations')
+    .select('id, authority_id, created_at, updated_at')
+    .eq('survivor_id', survivorId)
+    .order('updated_at', { ascending: false });
+  return data ?? [];
+}
+
+export async function getConversationById(conversationId: string) {
+  const { data, error } = await supabase
+    .from('conversations')
+    .select('*')
+    .eq('id', conversationId)
+    .single();
+  if (error) return null;
+  return data;
+}
+
+export async function getConversationMessages(conversationId: string) {
+  const { data } = await supabase
+    .from('conversation_messages')
+    .select('*')
+    .eq('conversation_id', conversationId)
+    .order('created_at', { ascending: true });
+  return data ?? [];
+}
+
+export async function sendMessage(
+  conversationId: string,
+  senderId: string,
+  content: string,
+  role: 'survivor' | 'authority'
+) {
+  const { data: msg } = await supabase
+    .from('conversation_messages')
+    .insert({
+      conversation_id: conversationId,
+      sender_id: senderId,
+      content,
+      role,
+    })
+    .select()
+    .single();
+  await supabase
+    .from('conversations')
+    .update({ updated_at: new Date().toISOString() })
+    .eq('id', conversationId);
+  return msg;
+}
+
+export async function createConversation(survivorId: string, authorityId: string) {
+  const { data, error } = await supabase
+    .from('conversations')
+    .insert({
+      survivor_id: survivorId,
+      authority_id: authorityId,
+    })
+    .select()
+    .single();
+  if (error) return { data: null, error };
+  return { data, error: null };
+}
+
+export function subscribeToMessages(
+  conversationId: string,
+  onInsert: (payload: unknown) => void
+) {
+  return supabase
+    .channel(`messages:${conversationId}`)
+    .on(
+      'postgres_changes',
+      {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'conversation_messages',
+        filter: `conversation_id=eq.${conversationId}`,
+      },
+      onInsert
+    )
+    .subscribe();
+}
+
+// ─── Broadcasts ──────────────────────────────────────────────────────────────
+export async function getBroadcasts() {
+  const { data, error } = await supabase
+    .from('broadcasts')
+    .select('id, title, summary, body, sender, authority_id, created_at')
+    .order('created_at', { ascending: false });
+  if (error) return [];
+  return data ?? [];
+}
+
+export async function getBroadcastById(id: string) {
+  const { data, error } = await supabase
+    .from('broadcasts')
+    .select('*')
+    .eq('id', id)
+    .single();
+  if (error) return null;
+  return data;
+}
+
+export async function getAuthorityBroadcasts(authorityId: string) {
+  const { data, error } = await supabase
+    .from('broadcasts')
+    .select('id, title, summary, body, sender, authority_id, created_at')
+    .eq('authority_id', authorityId)
+    .order('created_at', { ascending: false });
+  if (error) return [];
+  return data ?? [];
+}
+
+export async function createBroadcast(b: { title: string; summary: string; body: string; sender: string; authority_id: string }) {
+  return supabase.from('broadcasts').insert(b).select().single();
+}
+
+export async function updateBroadcast(id: string, b: { title?: string; summary?: string; body?: string; sender?: string }) {
+  return supabase.from('broadcasts').update({ ...b, updated_at: new Date().toISOString() }).eq('id', id).select().single();
+}
+
+export async function deleteBroadcast(id: string) {
+  return supabase.from('broadcasts').delete().eq('id', id);
+}
+

@@ -6,14 +6,12 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Modal,
   Switch,
   Alert,
   Pressable,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Colors } from '../../../constants/colors';
-import { SUPPORTED_LANGUAGES } from '../../../constants/languages';
 import { useAppStore } from '../../../lib/store';
 import { saveEnabledDialectNames } from '../../../lib/dialectStorage';
 import { useAuth } from '../../../lib/auth/AuthContext';
@@ -22,11 +20,7 @@ export default function SettingsScreen() {
   const router = useRouter();
   const { signOut } = useAuth();
   const {
-    myLanguage,
-    myLanguageLabel,
-    myLanguageFlag,
     detectedLanguage,
-    setMyLanguage,
     ghostEnabled,
     dialectEnabled,
     setGhostEnabled,
@@ -37,7 +31,6 @@ export default function SettingsScreen() {
     toggleDialectEnabled,
   } = useAppStore();
 
-  const [langDropdownOpen, setLangDropdownOpen] = useState(false);
   const [dialectDropdownOpen, setDialectDropdownOpen] = useState(false);
 
   const handleSignOut = async () => {
@@ -73,44 +66,8 @@ export default function SettingsScreen() {
     ])
   ).sort();
 
-  const selectedLang = SUPPORTED_LANGUAGES.find((l) => l.code === myLanguage) ?? SUPPORTED_LANGUAGES[0];
-
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      {/* My language - dropdown */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>PREFERRED LANGUAGE</Text>
-        <Text style={styles.sectionDesc}>
-          For reading, speaking, and listening in Report, Convo, and Broadcast.
-        </Text>
-        <Pressable
-          style={styles.dropdown}
-          onPress={() => setLangDropdownOpen(!langDropdownOpen)}
-        >
-          <Text style={styles.dropdownFlag}>{selectedLang.flag}</Text>
-          <Text style={styles.dropdownLabel}>{selectedLang.label}</Text>
-          <Text style={styles.dropdownChevron}>{langDropdownOpen ? '▲' : '▼'}</Text>
-        </Pressable>
-        {langDropdownOpen && (
-          <View style={styles.dropdownList}>
-            {SUPPORTED_LANGUAGES.map((lang) => (
-              <TouchableOpacity
-                key={lang.code}
-                style={[styles.dropdownItem, myLanguage === lang.code && styles.dropdownItemActive]}
-                onPress={() => {
-                  setMyLanguage(lang.code, lang.label, lang.flag);
-                  setLangDropdownOpen(false);
-                }}
-              >
-                <Text style={styles.dropdownItemFlag}>{lang.flag}</Text>
-                <Text style={styles.dropdownItemLabel}>{lang.label}</Text>
-                {myLanguage === lang.code && <Text style={styles.checkmark}>✓</Text>}
-              </TouchableOpacity>
-            ))}
-          </View>
-        )}
-      </View>
-
       {/* Detected language */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>AUTO-DETECTED LOCAL LANGUAGE</Text>
@@ -127,18 +84,6 @@ export default function SettingsScreen() {
         )}
       </View>
 
-      {/* Profile shortcut */}
-      <View style={styles.section}>
-        <TouchableOpacity style={styles.linkCard} onPress={() => router.push('/(survivor)/(tabs)/profile' as any)}>
-          <Text style={styles.linkIcon}>👤</Text>
-          <View style={styles.linkContent}>
-            <Text style={styles.linkTitle}>Profile</Text>
-            <Text style={styles.linkDesc}>Manage your personal info and emergency contacts</Text>
-          </View>
-          <Text style={styles.linkArrow}>›</Text>
-        </TouchableOpacity>
-      </View>
-
       {/* Dialect Bank - unified */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>DIALECT BANK</Text>
@@ -147,27 +92,21 @@ export default function SettingsScreen() {
         </Text>
 
         <View style={[styles.explainerCard, { borderColor: Colors.info }]}>
-          <Text style={[styles.explainerTitle, { color: Colors.info }]}>🗣️ Ghost + Glossary</Text>
+          <Text style={[styles.explainerTitle, { color: Colors.info }]}>🗣️ Dialects</Text>
           <Text style={styles.explainerBody}>
-            Acoustic and word-level patching for local dialects. Check the dialects you want to use.
+            Each dialect has a phrase bank (audio) and glossary (text patching). Enable dialects for Report, Convo, and Broadcast.
           </Text>
         </View>
 
-        {/* Master toggles */}
+        {/* Single dialect toggle */}
         <View style={styles.toggleRow}>
-          <Text style={styles.toggleLabel}>Ghost Interpreter</Text>
+          <Text style={styles.toggleLabel}>Enable dialect processing</Text>
           <Switch
-            value={ghostEnabled}
-            onValueChange={setGhostEnabled}
-            trackColor={{ false: Colors.surfaceElevated, true: '#7C3AED' }}
-            thumbColor="#fff"
-          />
-        </View>
-        <View style={styles.toggleRow}>
-          <Text style={styles.toggleLabel}>Glossary Patching</Text>
-          <Switch
-            value={dialectEnabled}
-            onValueChange={setDialectEnabled}
+            value={dialectEnabled || ghostEnabled}
+            onValueChange={(v) => {
+              setDialectEnabled(v);
+              setGhostEnabled(v);
+            }}
             trackColor={{ false: Colors.surfaceElevated, true: Colors.info }}
             thumbColor="#fff"
           />
@@ -205,7 +144,7 @@ export default function SettingsScreen() {
                     <Text style={styles.dialectName}>{dialectName}</Text>
                   </View>
                   <Text style={styles.dialectMeta}>
-                    {ghostCount} ghost · {glossCount} glossary
+                    {ghostCount} phrases · {glossCount} glossary entries
                   </Text>
                 </TouchableOpacity>
               );
@@ -289,6 +228,17 @@ const styles = StyleSheet.create({
   detectedFlag: { fontSize: 32 },
   detectedLabel: { color: Colors.textPrimary, fontSize: 16, fontWeight: '700' },
   detectedRegion: { color: Colors.textSecondary, fontSize: 12, marginTop: 2 },
+  urlInput: {
+    backgroundColor: Colors.surface,
+    borderRadius: 10,
+    borderWidth: 1.5,
+    borderColor: Colors.border,
+    color: Colors.textPrimary,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontSize: 14,
+    marginTop: 8,
+  },
   linkCard: {
     flexDirection: 'row',
     alignItems: 'center',

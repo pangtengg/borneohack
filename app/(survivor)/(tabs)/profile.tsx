@@ -13,21 +13,13 @@ import { SUPPORTED_LANGUAGES } from '../../../constants/languages';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { useProfile } from '@/lib/auth/useProfile';
 import { supabase } from '@/lib/supabase';
+import { useAppStore } from '@/lib/store';
 
 export default function ProfileScreen() {
   const { user } = useAuth();
   const { profile } = useProfile();
 
-  const [legalName, setLegalName] = useState('');
-  const [nationality, setNationality] = useState('');
-  const [icPassport, setIcPassport] = useState('');
-  const [age, setAge] = useState('');
-  const [gender, setGender] = useState('');
-  const [race, setRace] = useState('');
-  const [religion, setReligion] = useState('');
-  const [address, setAddress] = useState('');
-  const [medicalConditions, setMedicalConditions] = useState('');
-  const [emergencyContacts, setEmergencyContacts] = useState('');
+  const [displayName, setDisplayName] = useState('');
   const [langReading, setLangReading] = useState('en');
   const [langSpeaking, setLangSpeaking] = useState('en');
   const [langListening, setLangListening] = useState('en');
@@ -35,22 +27,7 @@ export default function ProfileScreen() {
 
   useEffect(() => {
     if (profile) {
-      setLegalName(profile.legal_name ?? '');
-      setNationality(profile.nationality ?? '');
-      setIcPassport(profile.ic_passport ?? '');
-      setAge(profile.age?.toString() ?? '');
-      setGender(profile.gender ?? '');
-      setRace(profile.race ?? '');
-      setReligion(profile.religion ?? '');
-      setAddress(profile.address ?? '');
-      setMedicalConditions(profile.medical_conditions ?? '');
-      setEmergencyContacts(
-        typeof profile.emergency_contacts === 'string'
-          ? profile.emergency_contacts
-          : Array.isArray(profile.emergency_contacts)
-          ? JSON.stringify(profile.emergency_contacts, null, 2)
-          : ''
-      );
+      setDisplayName(profile.display_name ?? '');
       setLangReading(profile.lang_reading ?? 'en');
       setLangSpeaking(profile.lang_speaking ?? 'en');
       setLangListening(profile.lang_listening ?? 'en');
@@ -62,20 +39,11 @@ export default function ProfileScreen() {
     setSaving(true);
     try {
       const { error } = await supabase
-        .from('profiles')
+        .from('survivor_profiles')
         .upsert(
           {
             id: user.id,
-            legal_name: legalName || null,
-            nationality: nationality || null,
-            ic_passport: icPassport || null,
-            age: age ? parseInt(age, 10) : null,
-            gender: gender || null,
-            race: race || null,
-            religion: religion || null,
-            address: address || null,
-            medical_conditions: medicalConditions || null,
-            emergency_contacts: emergencyContacts.trim() ? tryParseJson(emergencyContacts) : null,
+            display_name: displayName.trim() || 'Survivor',
             lang_reading: langReading,
             lang_speaking: langSpeaking,
             lang_listening: langListening,
@@ -83,9 +51,14 @@ export default function ProfileScreen() {
           { onConflict: 'id' }
         );
       if (error) throw error;
+      const lang = SUPPORTED_LANGUAGES.find((l) => l.code === langReading) ?? SUPPORTED_LANGUAGES[0];
+      useAppStore.getState().setMyLanguage(langReading, lang.label, lang.flag);
       Alert.alert('Saved', 'Your profile has been updated.');
     } catch (e) {
-      Alert.alert('Error', e instanceof Error ? e.message : 'Could not save profile.');
+      const err = e as { message?: string };
+      const msg = err?.message ?? (e instanceof Error ? e.message : 'Could not save profile.');
+      console.error('[Profile save]', err);
+      Alert.alert('Error', msg);
     } finally {
       setSaving(false);
     }
@@ -93,28 +66,16 @@ export default function ProfileScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.sectionTitle}>PERSONAL INFO</Text>
+      <Text style={styles.sectionTitle}>PROFILE</Text>
       <View style={styles.inputGroup}>
-        <Text style={styles.inputLabel}>Legal name</Text>
-        <TextInput style={styles.input} value={legalName} onChangeText={setLegalName} placeholder="Full legal name" placeholderTextColor={Colors.textMuted} />
-        <Text style={styles.inputLabel}>Nationality</Text>
-        <TextInput style={styles.input} value={nationality} onChangeText={setNationality} placeholder="e.g. Malaysian" placeholderTextColor={Colors.textMuted} />
-        <Text style={styles.inputLabel}>IC / Passport</Text>
-        <TextInput style={styles.input} value={icPassport} onChangeText={setIcPassport} placeholder="ID number" placeholderTextColor={Colors.textMuted} />
-        <Text style={styles.inputLabel}>Age</Text>
-        <TextInput style={styles.input} value={age} onChangeText={setAge} placeholder="Age" placeholderTextColor={Colors.textMuted} keyboardType="number-pad" />
-        <Text style={styles.inputLabel}>Gender</Text>
-        <TextInput style={styles.input} value={gender} onChangeText={setGender} placeholder="Gender" placeholderTextColor={Colors.textMuted} />
-        <Text style={styles.inputLabel}>Race</Text>
-        <TextInput style={styles.input} value={race} onChangeText={setRace} placeholder="Ethnicity / race" placeholderTextColor={Colors.textMuted} />
-        <Text style={styles.inputLabel}>Religion</Text>
-        <TextInput style={styles.input} value={religion} onChangeText={setReligion} placeholder="Religion" placeholderTextColor={Colors.textMuted} />
-        <Text style={styles.inputLabel}>Residential address</Text>
-        <TextInput style={[styles.input, styles.inputMultiline]} value={address} onChangeText={setAddress} placeholder="Full address" placeholderTextColor={Colors.textMuted} multiline />
-        <Text style={styles.inputLabel}>Pre-existing medical conditions</Text>
-        <TextInput style={[styles.input, styles.inputMultiline]} value={medicalConditions} onChangeText={setMedicalConditions} placeholder="Any conditions rescuers should know" placeholderTextColor={Colors.textMuted} multiline />
-        <Text style={styles.inputLabel}>Emergency contacts (JSON)</Text>
-        <TextInput style={[styles.input, styles.inputMultiline]} value={emergencyContacts} onChangeText={setEmergencyContacts} placeholder='[{"name":"...","phone":"..."}]' placeholderTextColor={Colors.textMuted} multiline />
+        <Text style={styles.inputLabel}>Display name</Text>
+        <TextInput
+          style={styles.input}
+          value={displayName}
+          onChangeText={setDisplayName}
+          placeholder="Your name or nickname"
+          placeholderTextColor={Colors.textMuted}
+        />
       </View>
 
       <Text style={styles.sectionTitle}>PREFERRED LANGUAGES</Text>
@@ -146,14 +107,6 @@ export default function ProfileScreen() {
   );
 }
 
-function tryParseJson(str: string): unknown {
-  try {
-    return JSON.parse(str);
-  } catch {
-    return str;
-  }
-}
-
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
   content: { padding: 20, gap: 20, paddingBottom: 40 },
@@ -170,7 +123,6 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     fontSize: 14,
   },
-  inputMultiline: { minHeight: 80, textAlignVertical: 'top' },
   langSection: { gap: 12 },
   langRow: { gap: 8 },
   langScroll: { flexDirection: 'row', gap: 8 },

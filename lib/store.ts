@@ -1,12 +1,15 @@
+import Constants from 'expo-constants';
 import { create } from 'zustand';
 import { DetectedLanguage } from './languageMap';
 import { CountryInfo } from './countryDetect';
 import { GhostPack, GlossaryPack, DetectedDialect } from './types/dialect';
 
+const getDefaultServerUrl = (): string =>
+  Constants.expoConfig?.extra?.serverUrl ?? 'http://localhost:3001';
+
 interface AppState {
-  // Server URL
+  // Server URL (from app.config extra / EXPO_PUBLIC_SERVER_URL)
   serverUrl: string;
-  setServerUrl: (url: string) => void;
 
   // Existing
   detectedLanguage: DetectedLanguage | null;
@@ -50,9 +53,8 @@ interface AppState {
 }
 
 export const useAppStore = create<AppState>((set) => ({
-  // Server URL
-  serverUrl: 'http://localhost:8000',
-  setServerUrl: (url) => set({ serverUrl: url }),
+  // Server URL - from app.json extra / EXPO_PUBLIC_SERVER_URL
+  serverUrl: getDefaultServerUrl(),
 
   // Existing
   detectedLanguage: null,

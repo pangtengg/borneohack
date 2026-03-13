@@ -55,7 +55,8 @@
         "projectId": "402ebfc0-2c94-4763-b4a7-bebf23eea218"
       },
       "supabaseUrl": "https://pbpsqqvbjtyojxcgenqd.supabase.co",
-      "supabaseAnonKey": "sb_publishable_bnmm0OYCtIdIvyw2knLJcg_lCj41RT3"
+      "supabaseAnonKey": "sb_publishable_bnmm0OYCtIdIvyw2knLJcg_lCj41RT3",
+      "serverUrl": "http://localhost:3001"
     },
     "owner": "abelchinjh"
   }

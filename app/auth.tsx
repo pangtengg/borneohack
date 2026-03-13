@@ -66,10 +66,13 @@ export default function AuthScreen() {
           if (user) {
             await supabase
               .from('profiles')
+              .upsert({ id: user.id, role: 'survivor' }, { onConflict: 'id' });
+            await supabase
+              .from('survivor_profiles')
               .upsert(
                 {
                   id: user.id,
-                  role: 'survivor',
+                  display_name: email.split('@')[0] || 'Survivor',
                   lang_reading: langReading,
                   lang_speaking: langSpeaking,
                   lang_listening: langListening,

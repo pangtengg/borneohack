@@ -7,25 +7,19 @@ export type UserRole = 'survivor' | 'authority';
 export interface Profile {
   id: string;
   role: UserRole;
+  display_name?: string;
   lang_reading?: string;
   lang_speaking?: string;
   lang_listening?: string;
-  legal_name?: string;
-  nationality?: string;
-  ic_passport?: string;
-  age?: number;
-  gender?: string;
-  race?: string;
-  religion?: string;
-  address?: string;
-  medical_conditions?: string;
-  emergency_contacts?: unknown;
+  full_name?: string;
   service_name?: string;
-  location?: string;
   rank?: string;
-  superior?: string;
+  office_location?: string;
+  superior_name?: string;
+  superior_contact?: string;
   office_number?: string;
   working_hours?: string;
+  staff_id?: string;
 }
 
 export function useProfile() {
@@ -45,9 +39,30 @@ export function useProfile() {
     let mounted = true;
 
     void (async () => {
-      const { data, error } = await supabase
-        .from('profiles')
+      // Check authority_profiles first; if found, user is authority
+      const { data: authData } = await supabase
+        .from('authority_profiles')
         .select('*')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      if (!mounted) return;
+
+      if (authData) {
+        setProfile({
+          id: user.id,
+          role: 'authority',
+          service_name: authData.service_name,
+          ...authData,
+        } as Profile);
+        setLoading(false);
+        return;
+      }
+
+      // Else fetch survivor_profiles (schema: id, display_name, created_at, lang_*)
+      const { data: survData, error } = await supabase
+        .from('survivor_profiles')
+        .select('id, display_name, lang_reading, lang_speaking, lang_listening')
         .eq('id', user.id)
         .maybeSingle();
 
@@ -55,7 +70,11 @@ export function useProfile() {
       if (error) {
         setProfile(null);
       } else {
-        setProfile((data as Profile) ?? null);
+        setProfile(
+          survData
+            ? ({ id: user.id, role: 'survivor', ...survData } as Profile)
+            : ({ id: user.id, role: 'survivor' } as Profile)
+        );
       }
       setLoading(false);
     })();

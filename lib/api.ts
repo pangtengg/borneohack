@@ -173,6 +173,46 @@ export async function listPhraseBank(): Promise<PhraseBankRow[]> {
   return data.phrases ?? [];
 }
 
+export interface ReportChatMessage {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
+export interface ReportChatResponse {
+  reply: string;
+}
+
+export async function speakText(text: string, lang: string = 'en'): Promise<{ audioBase64: string }> {
+  const url = `${getBaseUrl()}/api/tts`;
+  const res = await fetchWithTimeout(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text, lang }),
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(err || 'TTS failed.');
+  }
+  return res.json();
+}
+
+export async function reportChat(
+  messages: ReportChatMessage[],
+  preferredLanguage?: string
+): Promise<ReportChatResponse> {
+  const url = `${getBaseUrl()}/api/report-chat`;
+  const res = await fetchWithTimeout(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ messages, preferredLanguage }),
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(err || 'Report chat failed. Check backend connection.');
+  }
+  return res.json();
+}
+
 export async function uploadPhraseBankEntry(
   input: UploadPhraseRequest,
 ): Promise<{ success: boolean; id: string }> {

@@ -5,118 +5,35 @@
 
 ---
 
-## What It Does
+## Why VoiceBridge?
 
-VoiceBridge is a stress-adaptive, location-aware emergency communication app that bridges language barriers between disaster survivors and rescuers across Southeast Asia.
+**ASEAN faces 600+ languages and dialects.** When disaster strikes—floods, earthquakes, typhoons—a survivor in Borneo speaking Murut or Bajau cannot tell a Thai or Indonesian rescuer *"I need medical help"* or *"My children are trapped."* Every second of miscommunication costs lives.
 
-**The problem:** In a disaster, a survivor speaking a specific local dialect cannot communicate with a rescuer from a different region. Every second of miscommunication costs lives.
-
-**The solution:** VoiceBridge auto-detects your GPS location, pre-loads the dominant local language with zero setup, translates your speech in real-time, and outputs a **calm, authoritative voice** regardless of how panicked the speaker sounds — because tone drives compliance in emergencies.
+VoiceBridge breaks the language barrier: speak in your language → hear the rescuer’s reply in theirs. Zero setup. Works in panic mode.
 
 ---
 
-## Project Structure
+## Core Features (Hackathon Highlights)
 
-```
-borneohack/
-├── app/
-│   ├── _layout.tsx              # Root layout + AuthProvider
-│   ├── index.tsx                # Auth gate — redirects by session & role
-│   ├── auth.tsx                 # Login/Signup (Survivor or Authority)
-│   ├── (survivor)/
-│   │   ├── _layout.tsx          # Stack: tabs + Report, Convo, Broadcast, Phrases
-│   │   ├── (tabs)/
-│   │   │   ├── _layout.tsx      # Tabs: Home, Profile, Settings
-│   │   │   ├── index.tsx        # Home — 3 buttons: Report, Convo, Broadcast
-│   │   │   ├── profile.tsx      # Survivor profile form (cloud DB)
-│   │   │   └── settings.tsx     # Backend URL, Dialect config
-│   │   ├── report.tsx           # Make report (AI flow placeholder)
-│   │   ├── convo.tsx            # Voice bridge — STT/TTS, dialect, phrases
-│   │   ├── broadcast.tsx        # Location-based broadcasts (placeholder)
-│   │   └── phrases.tsx          # Full phrase bank by category
-│   └── (authority)/
-│       ├── _layout.tsx          # Authority layout
-│       └── index.tsx            # Authority dashboard (incoming reports)
-├── components/
-│   ├── CountryPickerModal.tsx   # Regional selection UI
-│   ├── CountryPill.tsx          # Selected region indicator
-│   ├── DialectBadge.tsx         # Active dialect indicator
-│   ├── GhostCard.tsx            # Ghost matching UI component
-│   ├── LanguageBadge.tsx        # Language indicator pill
-│   ├── ManualFallbackModal.tsx  # Manual override for auto-detect
-│   ├── PanicToggle.tsx          # Emergency mode toggle
-│   ├── PatchedCard.tsx          # Glossary patch UI component
-│   ├── PhraseBankGrid.tsx       # Grid layout for emergency phrases
-│   ├── PhraseCard.tsx           # Individual phrase button
-│   ├── PushToTalk.tsx           # Animated hold-to-record button
-│   └── WaveformIndicator.tsx    # Recording animation
-├── lib/
-│   ├── supabase.ts              # Supabase client (AsyncStorage persistence)
-│   ├── auth/
-│   │   ├── AuthContext.tsx      # Session provider (signIn, signUp, signOut)
-│   │   └── useProfile.ts        # Profile fetch for role-based routing
-│   ├── api.ts                   # Backend API client
-│   ├── audioPlayer.ts           # expo-av playback
-│   ├── audioRecorder.ts         # expo-av recording
-│   ├── countryDetect.ts         # GPS-based country resolution
-│   ├── dialectStorage.ts        # Local storage for dialect preferences
-│   ├── languageMap.ts           # Core language mappings
-│   ├── store.ts                 # Zustand global state
-│   ├── data/demoPacks.ts        # Pre-loaded demo configurations
-│   ├── types/dialect.ts         # TypeScript definitions for dialects
-│   └── utils/
-│       ├── dialectDetect.ts     # Dialect parsing logic
-│       ├── ghostMatch.ts        # Text/Audio ghost matching utilities
-│       └── glossaryPatch.ts     # Regional vocabulary substitutions
-├── constants/
-│   ├── colors.ts                # Design tokens
-│   ├── languages.ts             # Supported language list
-│   └── phrases.ts               # Emergency phrase bank data
-└── server/
-    ├── src/
-    │   ├── index.ts             # Express server entry
-    │   ├── routes/
-    │   │   ├── translate.ts     # POST /api/translate
-    │   │   └── phrases.ts       # POST /api/phrase
-    │   ├── services/
-    │   │   ├── whisper.ts       # OpenAI Whisper wrapper
-    │   │   ├── translate.ts     # Google Translate wrapper
-    │   │   └── elevenlabs.ts    # ElevenLabs TTS wrapper
-    │   └── utils/
-    │       └── languageMap.ts   # Backend coordinate resolver
-    └── package.json
-```
+| Feature | What it does |
+|--------|---------------|
+| **🗣️ Real-time voice translation** | Speak → Groq STT → Google Translate → ElevenLabs TTS. Survivor hears a **calm, authoritative voice** even if they’re panicking—tone drives compliance. |
+| **🌍 14 SE Asian languages** | Malay, Indonesian, Thai, Vietnamese, Filipino, Burmese, Khmer, Lao, and more. GPS auto-detects local language—no menu in a crisis. |
+| **📋 AI-guided Report** | Chat with Groq LLM: one question at a time (location, disaster type, severity, injuries, needs). Submits structured report to authorities. |
+| **🔊 Quick phrases** | Tap pre-translated phrases: “I am trapped,” “I need medical help,” “Where is the evacuation point?” Instant playback. |
+| **📡 Broadcasts** | Authorities create alerts; survivors see them in Broadcast. Stored in Supabase, managed from Authority dashboard. |
+| **💬 Convo** | WhatsApp-style messaging between survivor and authority. Supabase Realtime. |
+| **📱 Role-based** | Survivor (sign up) vs Authority (login). Profile stores display name + preferred language. |
 
 ---
 
-## Key Features
+## How It Improves ASEAN Disaster Resilience
 
-### Zero-Friction Setup
-- GPS auto-detects the dominant local language and dialect on launch, no language menu to navigate in a panic. (e.g., distinguishing between standard Malay and specific Bornean dialects).
-- Includes manual fallback modals if GPS fails.
-- Covers 14 SE Asian language regions: Malay, Indonesian, Thai, Vietnamese, Filipino, Burmese, Khmer, Lao, and more
-
-### Stress-Adaptive Voice Output
-- ElevenLabs Multilingual v2 synthesizes all output using a single pre-configured **calm, authoritative "relief coordinator" voice**
-- Strips panic from the output tone — a panicking survivor's voice becomes a clear, calm command for rescuers
-
-### Glossary Patching & Ghost Matching
-- Translates not just standard languages, but patches specific regional vocabularies using custom glossary maps.
-- Ensures highly accurate local context is maintained during translations.
-
-### Role-Based Access (Supabase Auth)
-| Role | Who uses it | How it works |
-|------|-------------|---------------|
-| **Survivor** | Person in distress | Sign up before disaster. Three actions: **Report** (AI voice flow), **Convo** (voice/text with officers), **Broadcast** (location-based alerts). Profile stores personal info in cloud DB. |
-| **Authority** | Emergency responder | Login only (org pre-creates accounts). Dashboard to view incoming reports, add notes, update status. |
-
-### Quick Phrases in Report & Convo
-Pre-translated critical phrases with instant playback — easy-to-tap buttons during active STT/TTS sessions:
-- "I am trapped under rubble"
-- "I need medical help"
-- "I have children with me"
-- "Where is the evacuation point?"
-- 12 more phrases across Medical, Rescue, Evacuation, and Vulnerable Person categories
+- **Overcomes language barriers** — Migrant workers, ethnic minorities, and tourists can communicate with local rescuers.
+- **Location-aware** — GPS picks the dominant local language; no setup during panic.
+- **Stress-adaptive voice** — Panicked speech → calm output. Rescuers get clear instructions.
+- **Cross-border ready** — Works across ASEAN: Malaysian floods, Thai earthquakes, Philippine typhoons.
+- **Structured reports** — AI guides survivors to provide location, severity, injuries, needs. Authorities get actionable data.
 
 ---
 
@@ -142,34 +59,52 @@ Pre-translated critical phrases with instant playback — easy-to-tap buttons du
 | Speech-to-Text | Groq |
 | Translation | Google Cloud Translate v2 |
 | Text-to-Speech | ElevenLabs Multilingual v2 |
+| Report Chat | Groq (Llama) |
 | Location | `expo-location` (GPS) |
-| Audio I/O | `expo-av` |
 
 ---
 
-## Getting Started
+## Setup (Quick Start)
 
-### Prerequisites
-- Node.js 18+
-- Expo Account, Expo Application Services (EAS) CLI
-- API keys for: Groq, Google Cloud Translate, ElevenLabs
-- Supabase project (for Auth and profiles)
+**Order:** 1) Supabase ✓ → 2) Backend server → 3) App → 4) Server URL
 
-### Supabase Setup
-1. Create a project at [supabase.com](https://supabase.com)
-2. Run the SQL to create `profiles` table with RLS and `handle_new_user` trigger (see migration plan or README section below)
-3. In `app.json` under `extra`, set `supabaseUrl` and `supabaseAnonKey` to your project values
-4. Authority users: create via Supabase dashboard, then set `role = 'authority'` in `profiles` for that user
+### Setup now (Supabase already done)
 
-**Profiles SQL (run in Supabase SQL Editor):**
+1. **Backend:** `cd server` → `npm install` → `cp .env.example .env` → fill API keys → `npm run dev`
+2. **App:** `npm install` → `npx expo start` → press `a` or `i`
+3. **Server URL:** For Wi‑Fi, add `EXPO_PUBLIC_SERVER_URL=http://YOUR_LAPTOP_IP:3001` to root `.env`
+
+### 1. Supabase (if not done)
+
+1. Create project at [supabase.com](https://supabase.com)
+2. Run **Profiles SQL** and **Survivor profiles SQL** (see below)
+3. Run migrations 001–006 in order (SQL Editor)
+4. Set `supabaseUrl` and `supabaseAnonKey` in `app.json` → `extra`
+5. Authority users: create in Auth, add row to `authority_profiles`
+
+**Profiles (parent table — stores role + shared fields):**
 ```sql
 create table public.profiles (
-  id uuid primary key references auth.users on delete cascade,
-  role text not null check (role in ('survivor', 'authority')),
-  lang_reading text, lang_speaking text, lang_listening text,
-  legal_name text, nationality text, ic_passport text, age int, gender text,
-  race text, religion text, address text, medical_conditions text, emergency_contacts jsonb,
-  service_name text, location text, rank text, superior text, office_number text, working_hours text
+  id uuid not null,
+  role text not null,
+  lang_reading text not null default 'en',
+  lang_speaking text not null default 'en',
+  lang_listening text not null default 'en',
+  created_at timestamptz null default now(),
+  updated_at timestamptz null default now(),
+  legal_name text null,
+  nationality text null,
+  ic_passport text null,
+  age integer null,
+  gender text null,
+  race text null,
+  religion text null,
+  address text null,
+  medical_conditions text null,
+  emergency_contacts jsonb null,
+  constraint profiles_pkey primary key (id),
+  constraint profiles_id_fkey foreign key (id) references auth.users (id) on delete cascade,
+  constraint profiles_role_check check (role = any (array['survivor','authority']))
 );
 alter table public.profiles enable row level security;
 create policy "Users can read own profile" on public.profiles for select using (auth.uid() = id);
@@ -181,107 +116,125 @@ $$ language plpgsql security definer;
 create trigger on_auth_user_created after insert on auth.users for each row execute procedure public.handle_new_user();
 ```
 
-### 1. Mobile App
-
-```bash
-# From repo root
-npm install
+**Survivor profiles (extends profiles for survivors):**
+```sql
+create table public.survivor_profiles (
+  id uuid not null,
+  display_name text not null,
+  created_at timestamptz null default now(),
+  lang_reading text null default 'en',
+  lang_speaking text null default 'en',
+  lang_listening text null default 'en',
+  constraint survivor_profiles_pkey primary key (id),
+  constraint survivor_profiles_id_fkey foreign key (id) references public.profiles (id) on delete cascade
+);
+alter table public.survivor_profiles enable row level security;
+create policy "Survivors read own" on public.survivor_profiles for select using (auth.uid() = id);
+create policy "Survivors update own" on public.survivor_profiles for update using (auth.uid() = id);
+create policy "Survivors insert own" on public.survivor_profiles for insert with check (auth.uid() = id);
+create or replace function public.handle_new_survivor() returns trigger as $$
+begin
+  if not exists (select 1 from public.authority_profiles where id = new.id) then
+    insert into public.survivor_profiles (id, display_name) values (new.id, 'Survivor')
+    on conflict (id) do nothing;
+  end if;
+  return new;
+end;
+$$ language plpgsql security definer;
+create trigger on_profile_created after insert on public.profiles for each row execute procedure public.handle_new_survivor();
 ```
 
-**Run with USB debugging (recommended):**
-
-1. Connect your phone to the laptop via USB
-2. Enable USB debugging on the phone (Developer options)
-3. Run:
-
-```bash
-npx expo start
+**Authority profiles (extends profiles for authorities):**
+```sql
+create table public.authority_profiles (
+  id uuid not null,
+  full_name text not null,
+  service_name text not null,
+  rank text null,
+  office_location text null,
+  superior_name text null,
+  superior_contact text null,
+  office_number text null,
+  working_hours text null,
+  staff_id text null,
+  created_at timestamptz null default now(),
+  constraint authority_profiles_pkey primary key (id),
+  constraint authority_profiles_staff_id_key unique (staff_id),
+  constraint authority_profiles_id_fkey foreign key (id) references public.profiles (id) on delete cascade
+);
+alter table public.authority_profiles enable row level security;
+create policy "Authority read own" on public.authority_profiles for select using (auth.uid() = id);
+create policy "Authority update own" on public.authority_profiles for update using (auth.uid() = id);
+create policy "Authority insert own" on public.authority_profiles for insert with check (auth.uid() = id);
 ```
 
-4. Press `a` for Android or `i` for iOS. The app opens on your device with hot reload — changes in code appear live without rebuilding.
+**Migrations (run in order):** 001 → 002 → 003 → 004 → 005 → 006
 
-**Note:** For first-time setup, you may need a development build (`eas build`) if using native modules. For day-to-day development with USB, `npx expo start` is sufficient and avoids repeated APK builds.
-
-### 2. Backend Server
+### 2. Backend (Node server)
 
 ```bash
 cd server
 npm install
-
-# Copy and fill in your API keys
 cp .env.example .env
-
-# Edit .env with your keys
+# Edit .env: GROQ_API_KEY, GOOGLE_TRANSLATE_API_KEY, ELEVENLABS_API_KEY, ELEVENLABS_VOICE_ID, PORT=3001
 npm run dev
 ```
 
-Server runs at `http://localhost:3001`.
+### 3. Mobile app
 
-### 3. Connect App to Backend
-
-In the app's **Settings** tab, set the Backend Server URL to your machine's local IP address (not `localhost` — your phone needs to reach your computer on the same WiFi):
-
-```
-http://192.168.x.x:3001
+```bash
+npm install
+npx expo start
 ```
 
----
+Press `a` (Android) or `i` (iOS).
 
-## Environment Variables (server/.env)
+### 4. Server URL
+
+- **USB:** `adb reverse tcp:3001 tcp:3001` → use `http://localhost:3001` (in `app.json` extra)
+- **Wi‑Fi:** Add `EXPO_PUBLIC_SERVER_URL=http://YOUR_LAPTOP_IP:3001` to root `.env`
+
+### Backend env (server/.env)
 
 ```env
 GROQ_API_KEY=gsk-...
 GOOGLE_TRANSLATE_API_KEY=AIza...
 ELEVENLABS_API_KEY=...
-ELEVENLABS_VOICE_ID=...        # ID of your pre-cloned calm voice
+ELEVENLABS_VOICE_ID=...
 PORT=3001
 ```
 
-### Setting Up the ElevenLabs Calm Voice
+---
 
-1. Go to [ElevenLabs Voice Lab](https://elevenlabs.io/voice-lab)
-2. Use **Voice Design** to create a calm, authoritative male/female voice
-3. Copy the Voice ID and set it as `ELEVENLABS_VOICE_ID`
+## Optional: Dialect Tools Backend (Python)
+
+The `backend/` folder is a **separate Python service** for dialect/ghost phrase processing. The main app uses the Node `server/` for translate, Report chat, and TTS. Use this only if you need `/api/process` and `/api/phrasebank/*`.
+
+```powershell
+cd backend
+python -m venv venv
+venv\Scripts\activate
+pip install -r requirements.txt
+copy .env.example .env
+# Required: SUPABASE_URL, SUPABASE_KEY, GOOGLE_APPLICATION_CREDENTIALS, WHISPER_MODEL, GHOST_CONFIDENCE_THRESHOLD
+uvicorn main:app --reload --port 8000
+```
+
+Endpoints: `GET /health`, `POST /api/process`, `GET /api/phrasebank/list`, `POST /api/phrasebank/upload`.
 
 ---
 
-## API Reference
+## Project Structure
 
-### `POST /api/translate`
-Transcribes audio, translates, and returns synthesized speech.
-
-**Request:**
-```json
-{
-  "audioBase64": "<base64 encoded audio>",
-  "latitude": 3.14,
-  "longitude": 101.68,
-  "myLanguage": "en",
-  "targetLanguage": "ms"
-}
 ```
-
-**Response:**
-```json
-{
-  "sourceText": "I need help",
-  "sourceLang": "en",
-  "translatedText": "Saya memerlukan bantuan",
-  "targetLang": "ms",
-  "audioBase64": "<base64 MP3>"
-}
-```
-
-### `POST /api/phrase`
-Translates a preset phrase and returns synthesized speech (cached after first call).
-
-**Request:**
-```json
-{
-  "phraseKey": "trapped",
-  "phraseText": "I am trapped under rubble",
-  "targetLang": "th"
-}
+borneohack/
+├── app/                    # Expo Router app
+│   ├── (survivor)/         # Report, Convo, Broadcast, Profile, Settings
+│   └── (authority)/        # Dashboard (reports, broadcast management)
+├── server/                 # Node.js backend (translate, report-chat, tts, phrase)
+├── backend/                # Optional Python dialect tools
+├── lib/                    # supabase, api, auth, store
+└── constants/              # colors, languages, phrases
 ```
 
 ---
@@ -290,24 +243,26 @@ Translates a preset phrase and returns synthesized speech (cached after first ca
 
 | Goal | Impact |
 |------|--------|
-| **SDG 11** — Sustainable Cities | Directly improves disaster resilience infrastructure for SE Asian cities prone to floods, earthquakes, and typhoons |
-| **SDG 10** — Reduced Inequalities | Removes language barriers for migrant workers and ethnic minorities during disasters using localized dialects |
-| **SDG 17** — Partnerships | Enables cross-border ASEAN disaster relief coordination |
+| **SDG 11** | Improves disaster resilience for SE Asian cities |
+| **SDG 10** | Removes language barriers for migrants and minorities |
+| **SDG 17** | Enables cross-border ASEAN disaster relief |
 
 ---
 
-## Target Users
+## How to Demo (for Judges)
+
+1. **Sign up** as Survivor → set display name and language in Profile
+2. **Report** → chat with AI, answer location/disaster/severity, submit
+3. **Broadcast** → view alerts (authorities create from dashboard)
+4. **Convo** → message with authority (if available)
+5. **Translate** → hold Push-to-Talk, speak, hear translated calm output
 
 ---
 
-## How to interact with prototype
-> step by step guide for judges
-> test cases if applicable
+## AI Disclosure
+
+VoiceBridge uses Groq (LLM) for Report chat, Google Translate for text translation, and ElevenLabs for TTS. GPS and stored language preferences inform language selection.
 
 ---
 
-## AI disclosure
-
----
-
-*Made with purpose for BorneoHack. Disaster resilience is everyone's responsibility.*
+*Built for BorneoHack. Disaster resilience is everyone's responsibility.*

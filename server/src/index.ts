@@ -3,6 +3,8 @@ import express from 'express';
 import cors from 'cors';
 import { translateRouter } from './routes/translate';
 import { phrasesRouter } from './routes/phrases';
+import { reportChatRouter } from './routes/reportChat';
+import { ttsRouter } from './routes/tts';
 
 const app = express();
 const PORT = Number(process.env.PORT ?? 3001);
@@ -18,10 +20,14 @@ app.get('/health', (_req, res) => {
 
 app.use('/api/translate', translateRouter);
 app.use('/api/phrase', phrasesRouter);
+app.use('/api/report-chat', reportChatRouter);
+app.use('/api/tts', ttsRouter);
 
 app.listen(PORT, () => {
   console.log(`\n🌏 VoiceBridge API running on http://localhost:${PORT}`);
   console.log(`   GET  /health`);
   console.log(`   POST /api/translate`);
-  console.log(`   POST /api/phrase\n`);
+  console.log(`   POST /api/phrase`);
+  console.log(`   POST /api/report-chat`);
+  console.log(`   POST /api/tts\n`);
 });

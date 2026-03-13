@@ -1,5 +1,5 @@
 // babel.config.js
-// Adds @/ path alias for robust module resolution across nested route groups
+// Expo Router + @/ alias + Reanimated (plugin must be last)
 module.exports = function (api) {
   api.cache(true);
   return {
@@ -9,11 +9,10 @@ module.exports = function (api) {
         'module-resolver',
         {
           root: ['.'],
-          alias: {
-            '@': '.',
-          },
+          alias: { '@': '.' },
         },
       ],
+      'react-native-reanimated/plugin', // must be last
     ],
   };
 };
